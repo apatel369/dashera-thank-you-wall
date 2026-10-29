@@ -27,11 +27,13 @@ Requires Node.js 24 and npm.
 
 ```bash
 npm install
-npx vercel link --project dashera-thank-you-wall --scope team_ujWDTVyVoMgm6GwgTZ9zYxO9
+npx vercel link --project dashera-thank-you-wall --scope nimit-sevaks-projects
 npx vercel env pull .env.local --yes
 npm run db:migrate
 npx vercel dev
 ```
+
+Pushes to `main` on GitHub (`apatel369/dashera-thank-you-wall`) deploy to production automatically; other branches get preview URLs.
 
 Run `npm run build` to type-check and compile. `npm run dev` starts only the Vite front end; use `vercel dev` when testing the API.
 
@@ -40,7 +42,7 @@ Required Vercel environment variables:
 - `ADMIN_PASSWORD`: protects `/admin` and its control API.
 - `DATABASE_URL`: automatically provided by the connected Neon Free database.
 
-The project is linked to the Vercel project `dashera-thank-you-wall` and Neon resource `neon-purple-mountain`. The admin password is stored locally outside this project in `../dashera-wall-admin-password.txt` and in Vercel as a secret. Do not commit `.env.local` or the password file.
+The project is linked to the Vercel project `dashera-thank-you-wall` and Neon resource `dashera-wall-db`. The admin password is stored locally outside this project in `../dashera-wall-admin-password.txt` and in Vercel as a secret. Do not commit `.env.local` or the password file.
 
 ## Routes
 
