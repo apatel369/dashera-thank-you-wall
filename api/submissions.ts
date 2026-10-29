@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { addSubmission, getState, getSubmissions, getSubmissionsAfter, parseInput, storageErrorMessage, WallConflictError } from "./_store.js";
+import { addSubmission, getState, getSubmissions, getSubmissionsAfter, parseInput, reserveSubmission, storageErrorMessage, WallConflictError } from "./_store.js";
+import { clientIp } from "./_auth.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
@@ -31,6 +32,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       const input = parseInput(req.body);
       if (!input) return res.status(400).json({ error: "Invalid sticky note" });
+      if (!(await reserveSubmission(clientIp(req)))) {
+        return res.status(429).json({ error: "You're adding notes very quickly. Please wait a minute and try again." });
+      }
       return res.status(201).json(await addSubmission(input, state.session));
     }
     return res.status(405).json({ error: "Method not allowed" });
