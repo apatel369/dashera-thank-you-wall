@@ -82,3 +82,11 @@ test("test mode seeds, switches display modes, pauses guests, and restores real 
     if (state.testMode && state.session === demoSession) await store.endTest(demoSession);
   }
 });
+
+test("admin password check accepts only an exact string match", async () => {
+  const { passwordMatches } = await import("../api/_auth.ts");
+  assert.equal(passwordMatches("correct horse", "correct horse"), true);
+  assert.equal(passwordMatches("correct hors", "correct horse"), false);
+  assert.equal(passwordMatches("", "correct horse"), false);
+  assert.equal(passwordMatches(undefined, "correct horse"), false);
+});

@@ -45,6 +45,13 @@ await sql.query(
   " ON wall_approval_batches (session, created_at, id)",
 );
 await sql.query(
+  "CREATE TABLE IF NOT EXISTS admin_login_attempts (" +
+  " ip TEXT PRIMARY KEY," +
+  " failures INTEGER NOT NULL," +
+  " window_start BIGINT NOT NULL" +
+  ")",
+);
+await sql.query(
   "INSERT INTO wall_state (id, mode, session, changed_at) VALUES (1, 'wall', $1, $2)" +
   " ON CONFLICT (id) DO NOTHING",
   [randomBytes(8).toString("hex"), Date.now()],

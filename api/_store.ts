@@ -72,6 +72,30 @@ export function storageErrorMessage(error: unknown): string {
   return "Wall database is unavailable";
 }
 
+const LOGIN_MAX_FAILURES = 5;
+const LOGIN_LOCK_MS = 15 * 60 * 1000;
+
+// Failed admin logins are counted per client IP within a 15-minute window; reaching the limit locks that IP out until the window ends.
+export async function loginLocked(ip: string): Promise<boolean> {
+  const rows = await db().query("SELECT failures, window_start FROM admin_login_attempts WHERE ip = $1", [ip]);
+  if (!rows.length) return false;
+  return Number(rows[0].failures) >= LOGIN_MAX_FAILURES && Date.now() - Number(rows[0].window_start) < LOGIN_LOCK_MS;
+}
+
+export async function recordLoginFailure(ip: string): Promise<void> {
+  await db().query(
+    "INSERT INTO admin_login_attempts (ip, failures, window_start) VALUES ($1, 1, $2)" +
+    " ON CONFLICT (ip) DO UPDATE SET" +
+    " failures = CASE WHEN $2 - admin_login_attempts.window_start >= $3 THEN 1 ELSE admin_login_attempts.failures + 1 END," +
+    " window_start = CASE WHEN $2 - admin_login_attempts.window_start >= $3 THEN $2 ELSE admin_login_attempts.window_start END",
+    [ip, Date.now(), LOGIN_LOCK_MS],
+  );
+}
+
+export async function clearLoginFailures(ip: string): Promise<void> {
+  await db().query("DELETE FROM admin_login_attempts WHERE ip = $1", [ip]);
+}
+
 export async function getState(): Promise<WallState> {
   const rows = await db().query("SELECT mode, session, changed_at, test_mode, wifi_visible FROM wall_state WHERE id = 1");
   if (!rows.length) return initialState;

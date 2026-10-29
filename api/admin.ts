@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { endTest, getState, setMode, setWifiVisible, startNewSession, startTest, storageErrorMessage, WallConflictError, type WallMode } from "./_store.js";
-import { ADMIN_COOKIE, adminSignature, authenticated } from "./_auth.js";
+import { clearLoginFailures, endTest, getState, loginLocked, recordLoginFailure, setMode, setWifiVisible, startNewSession, startTest, storageErrorMessage, WallConflictError, type WallMode } from "./_store.js";
+import { ADMIN_COOKIE, adminSignature, authenticated, clientIp, passwordMatches } from "./_auth.js";
 
 const MAX_AGE = 12 * 60 * 60;
 
@@ -13,8 +13,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (action === "login") {
     const secret = process.env.ADMIN_PASSWORD;
     if (!secret) return res.status(503).json({ error: "ADMIN_PASSWORD is missing" });
-    if (typeof req.body?.password !== "string" || req.body.password !== secret) {
-      return res.status(401).json({ error: "Incorrect password" });
+    const ip = clientIp(req);
+    try {
+      if (await loginLocked(ip)) {
+        return res.status(429).json({ error: "Too many failed attempts. Try again in 15 minutes." });
+      }
+      if (!passwordMatches(req.body?.password, secret)) {
+        await recordLoginFailure(ip);
+        return res.status(401).json({ error: "Incorrect password" });
+      }
+      await clearLoginFailures(ip);
+    } catch (error) {
+      console.error(error);
+      return res.status(503).json({ error: storageErrorMessage(error) });
     }
     const expires = String(Date.now() + MAX_AGE * 1000);
     const secure = process.env.VERCEL ? "; Secure" : "";
