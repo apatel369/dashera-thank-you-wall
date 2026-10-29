@@ -48,9 +48,9 @@ npm test         # input and wall-flow checks
 
 ## Deploy to production
 
-Merge the pull request into `main`. GitHub Actions runs the tests, then deploys to https://dashera-thank-you-wall.vercel.app. Watch progress in the repo's **Actions** tab.
+Once the `test` check passes and the owner approves the pull request, merge it into `main`. GitHub Actions runs the tests, then deploys to https://dashera-thank-you-wall.vercel.app. Watch progress in the repo's **Actions** tab.
 
-Pushing straight to `main` also deploys to production. Prefer pull requests so the change gets a preview and a second look first.
+`main` is protected: you can't push to it directly, force-push, or delete it. Every change goes through a pull request with one approval and a passing `test` check.
 
 ## Rules
 
