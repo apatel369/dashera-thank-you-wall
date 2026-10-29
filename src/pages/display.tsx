@@ -363,7 +363,7 @@ function slotPositions(cols: number, rows: number): SlotPosition[] {
 // ── Main display ─────────────────────────────────────────────────────────────
 
 export default function Display() {
-  const [wallState, setWallState] = useState<WallState>({ mode: "wall", session: "initial", changedAt: 0, testMode: false, wifiVisible: false });
+  const [wallState, setWallState] = useState<WallState>({ mode: "wall", session: "initial", changedAt: 0, testMode: false });
   const [burnVisible, setBurnVisible] = useState(false);
   const [burnElapsedMs, setBurnElapsedMs] = useState(0);
   const [slots, setSlots] = useState<(ActiveSlot | null)[]>([]);
@@ -409,8 +409,7 @@ export default function Display() {
         setBurnVisible(state.mode === "burn" && burnAge < BURN_DURATION_MS);
         setWallState(previous =>
           previous.mode === state.mode && previous.session === state.session &&
-          previous.changedAt === state.changedAt && previous.testMode === state.testMode &&
-          previous.wifiVisible === state.wifiVisible
+          previous.changedAt === state.changedAt && previous.testMode === state.testMode
             ? previous : state,
         );
 
@@ -571,7 +570,7 @@ export default function Display() {
         {wallState.mode === "scroll" && <ScrollingNotes key={wallState.session} notes={scrollNotes} columns={columns}
           cols={cols} rows={rows} height={height} gridStyle={gridStyle} />}
       </div>
-      {wallState.mode === "qr" && <QrScreen session={wallState.session} wifiVisible={wallState.wifiVisible} />}
+      {wallState.mode === "qr" && <QrScreen session={wallState.session} />}
       {wallState.testMode && <div role="status" className="pointer-events-none absolute left-1/2 top-4 z-30 -translate-x-1/2 rounded-xl border-2 border-white bg-violet-700 px-5 py-2 text-lg font-bold tracking-widest text-white shadow-xl">
         TEST MODE · DEMO NOTES
       </div>}

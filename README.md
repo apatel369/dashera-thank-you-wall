@@ -7,7 +7,7 @@ This is a separate Vercel project based on `thank-you-wall-main`. It keeps the o
 ## Event flow
 
 1. Open `/admin` and sign in. Every authenticated load or refresh of the admin dashboard starts a new session: it creates a new QR code, clears the active wall, and starts in Fill wall mode without showing the code. The prior session's display mode is not carried over. A refresh during the 100-note test leaves that test in place.
-2. Open `/display` on the projector. Press **Show QR code** on `/admin` when you are ready; two large QR codes appear, one on each side of the logo. Both QR panels and the logo align 20 pixels from the top of the screen. Press **Show Wi-Fi network** to pop out a large, high-contrast square beneath the logo with the network name and password. Press **Hide Wi-Fi network** to remove it. The Wi-Fi square appears only on the QR screen and resets to hidden for each new session.
+2. Open `/display` on the projector. Press **Show QR code** on `/admin` when you are ready; two large QR codes appear, one on each side of the logo. Both QR panels and the logo align 20 pixels from the top of the screen.
 3. Attendees scan the code and submit notes. The QR code stays the same when you switch display modes.
 4. The admin page shows incoming notes as a read-only list. Press **Fill wall** to add one note every two seconds around the center artwork. Once full, each waiting note replaces one randomly chosen visible note; the wall stays still when no new notes arrive.
 5. Press **Scroll notes** to loop the latest 100 notes upward in side columns, leaving the artwork clear. New submissions join the moving stream without restarting it.

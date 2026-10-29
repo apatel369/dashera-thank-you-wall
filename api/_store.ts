@@ -2,7 +2,7 @@ import { neon } from "@neondatabase/serverless";
 import { randomBytes } from "node:crypto";
 
 export type WallMode = "qr" | "wall" | "scroll" | "burn";
-export type WallState = { mode: WallMode; session: string; changedAt: number; testMode: boolean; wifiVisible: boolean };
+export type WallState = { mode: WallMode; session: string; changedAt: number; testMode: boolean };
 export type ApprovalBatch = { id: string; noteIds: number[]; createdAt: number };
 export type Submission = {
   id: number;
@@ -18,7 +18,7 @@ export type Submission = {
   createdAt: string;
 };
 
-const initialState: WallState = { mode: "wall", session: "initial", changedAt: 0, testMode: false, wifiVisible: false };
+const initialState: WallState = { mode: "wall", session: "initial", changedAt: 0, testMode: false };
 
 export class WallConflictError extends Error {}
 
@@ -94,21 +94,10 @@ export async function clearLoginFailures(ip: string): Promise<void> {
 }
 
 export async function getState(): Promise<WallState> {
-  const rows = await db().query("SELECT mode, session, changed_at, test_mode, wifi_visible FROM wall_state WHERE id = 1");
+  const rows = await db().query("SELECT mode, session, changed_at, test_mode FROM wall_state WHERE id = 1");
   if (!rows.length) return initialState;
   const row = rows[0];
-  return { mode: row.mode as WallMode, session: String(row.session), changedAt: Number(row.changed_at), testMode: Boolean(row.test_mode), wifiVisible: Boolean(row.wifi_visible) };
-}
-
-export async function setWifiVisible(visible: boolean): Promise<WallState> {
-  const rows = await db().query(
-    "UPDATE wall_state SET wifi_visible = $1 WHERE id = 1 AND test_mode = false" +
-    " RETURNING mode, session, changed_at, test_mode, wifi_visible",
-    [visible],
-  );
-  if (!rows.length) throw new WallConflictError("End test mode before changing Wi-Fi details");
-  const row = rows[0];
-  return { mode: row.mode as WallMode, session: String(row.session), changedAt: Number(row.changed_at), testMode: Boolean(row.test_mode), wifiVisible: Boolean(row.wifi_visible) };
+  return { mode: row.mode as WallMode, session: String(row.session), changedAt: Number(row.changed_at), testMode: Boolean(row.test_mode) };
 }
 
 export async function setMode(mode: WallMode): Promise<WallState> {
@@ -122,7 +111,6 @@ export async function setMode(mode: WallMode): Promise<WallState> {
     session: current.session,
     changedAt: Date.now(),
     testMode: current.testMode,
-    wifiVisible: current.wifiVisible,
   };
   const rows = await db().query(
     "UPDATE wall_state SET mode = $1, session = $2, changed_at = $3 WHERE id = 1" +
@@ -137,14 +125,14 @@ export async function setMode(mode: WallMode): Promise<WallState> {
 
 export async function startNewSession(): Promise<WallState> {
   const rows = await db().query(
-    "UPDATE wall_state SET mode = 'wall', session = $1, changed_at = $2, wifi_visible = false" +
+    "UPDATE wall_state SET mode = 'wall', session = $1, changed_at = $2" +
     " WHERE id = 1 AND test_mode = false" +
-    " RETURNING mode, session, changed_at, test_mode, wifi_visible",
+    " RETURNING mode, session, changed_at, test_mode",
     [randomBytes(8).toString("hex"), Date.now()],
   );
   if (!rows.length) throw new WallConflictError("End test mode before starting a new session");
   const row = rows[0];
-  return { mode: row.mode as WallMode, session: String(row.session), changedAt: Number(row.changed_at), testMode: Boolean(row.test_mode), wifiVisible: Boolean(row.wifi_visible) };
+  return { mode: row.mode as WallMode, session: String(row.session), changedAt: Number(row.changed_at), testMode: Boolean(row.test_mode) };
 }
 
 export async function startTest(): Promise<WallState> {

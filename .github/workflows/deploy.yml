@@ -19,6 +19,7 @@ jobs:
   # Installs and tests without any secrets, so dependency install scripts never see the Vercel token.
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -31,6 +32,8 @@ jobs:
   deploy:
     needs: test
     runs-on: ubuntu-latest
+    # A deploy Vercel blocks (for example, a commit author without access) never finishes; fail fast instead of hanging for hours.
+    timeout-minutes: 10
     # Pull requests from forks get no secrets, so they cannot deploy.
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     permissions:

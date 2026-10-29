@@ -12,7 +12,7 @@ export type Submission = {
   createdAt: string;
 };
 
-export type WallState = { mode: "qr" | "wall" | "scroll" | "burn"; session: string; changedAt: number; testMode: boolean; wifiVisible: boolean };
+export type WallState = { mode: "qr" | "wall" | "scroll" | "burn"; session: string; changedAt: number; testMode: boolean };
 export type SubmissionCursor = { createdAt: string; id: number };
 export type SubmissionList = { items: Submission[]; total: number; state: WallState; reset: boolean; cursor: SubmissionCursor | null };
 

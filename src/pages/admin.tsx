@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Flame, QrCode, StickyNote, ExternalLink, LogOut, RefreshCw, FlaskConical, ArrowUp, Wifi } from "lucide-react";
+import { Flame, QrCode, StickyNote, ExternalLink, LogOut, RefreshCw, FlaskConical, ArrowUp } from "lucide-react";
 import { adminAction, adminSession, listSubmissions, type Submission, type SubmissionCursor, type WallState } from "@/lib/api";
 
 const modeLabels = { qr: "QR code", wall: "Filling wall", scroll: "Scrolling notes", burn: "Burned away" };
@@ -124,14 +124,6 @@ export default function Admin() {
     finally { setBusy(false); }
   };
 
-  const toggleWifi = async () => {
-    if (!state || state.testMode) return;
-    setBusy(true); setError("");
-    try { setState(await adminAction("wifi", { visible: !state.wifiVisible })); }
-    catch (err) { setError((err as Error).message); }
-    finally { setBusy(false); }
-  };
-
   if (checking) return <div className="min-h-screen texture-bg" />;
 
   if (!authenticated) return (
@@ -171,12 +163,6 @@ export default function Admin() {
           <button disabled={busy} onClick={() => changeMode("wall")} className={`admin-mode ${state?.mode === "wall" ? "admin-mode-active" : ""}`}><StickyNote size={30} /><span className="font-semibold">Fill wall</span><small>Add or replace one note every 2 seconds</small></button>
           <button disabled={busy} onClick={() => changeMode("scroll")} className={`admin-mode ${state?.mode === "scroll" ? "admin-mode-active" : ""}`}><ArrowUp size={30} /><span className="font-semibold">Scroll notes</span><small>Loop the latest 100 notes upward</small></button>
           <button disabled={busy || state?.mode === "burn"} onClick={() => changeMode("burn")} className={`admin-mode ${state?.mode === "burn" ? "admin-mode-active" : ""}`}><Flame size={30} /><span className="font-semibold">Burn away</span><small>Animate the notes into smoke</small></button>
-        </div>
-        <div className="mb-5 flex flex-wrap items-center gap-3 rounded-2xl border border-amber-200 bg-white/90 p-4 shadow-lg">
-          <button disabled={busy || !state || state.testMode} onClick={toggleWifi} aria-pressed={Boolean(state?.wifiVisible)} className={`inline-flex items-center gap-2 rounded-lg px-5 py-3 text-sm font-bold text-white disabled:opacity-50 ${state?.wifiVisible ? "bg-amber-800 hover:bg-amber-900" : "bg-amber-700 hover:bg-amber-800"}`}>
-            <Wifi size={20} /> {state?.wifiVisible ? "Hide Wi-Fi network" : "Show Wi-Fi network"}
-          </button>
-          <p className="text-sm text-amber-900/75">{state?.wifiVisible ? "Wi-Fi square is on and appears below the logo when the QR screen is shown." : "Wi-Fi square is hidden. Show it when guests need network access."}</p>
         </div>
         <div className="mb-5 flex flex-wrap gap-3">
           <button disabled={busy || !state} onClick={toggleTest} className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${state?.testMode ? "bg-violet-800 hover:bg-violet-900" : "bg-violet-600 hover:bg-violet-700"}`}><FlaskConical size={16} /> {state?.testMode ? "End test and restore wall" : "Start 100-note test"}</button>

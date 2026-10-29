@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { clearLoginFailures, endTest, getState, reserveLoginAttempt, setMode, setWifiVisible, startNewSession, startTest, storageErrorMessage, WallConflictError, type WallMode } from "./_store.js";
+import { clearLoginFailures, endTest, getState, reserveLoginAttempt, setMode, startNewSession, startTest, storageErrorMessage, WallConflictError, type WallMode } from "./_store.js";
 import { ADMIN_COOKIE, adminSignature, authenticated, clientIp, passwordMatches } from "./_auth.js";
 
 const MAX_AGE = 12 * 60 * 60;
@@ -42,13 +42,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const mode = req.body.mode as WallMode;
       return res.status(200).json(await setMode(mode));
     } catch (error) {
-      console.error(error);
-      return res.status(error instanceof WallConflictError ? 409 : 503).json({ error: storageErrorMessage(error) });
-    }
-  }
-  if (action === "wifi" && typeof req.body?.visible === "boolean") {
-    try { return res.status(200).json(await setWifiVisible(req.body.visible)); }
-    catch (error) {
       console.error(error);
       return res.status(error instanceof WallConflictError ? 409 : 503).json({ error: storageErrorMessage(error) });
     }
