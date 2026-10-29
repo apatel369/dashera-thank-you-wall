@@ -33,7 +33,7 @@ npm run db:migrate
 npx vercel dev
 ```
 
-Pushes to `main` on GitHub (`apatel369/dashera-thank-you-wall`) deploy to production automatically; other branches get preview URLs.
+GitHub Actions deploys this repo (`apatel369/dashera-thank-you-wall`): pushes to `main` go to production, and pull requests get a preview link. Collaborators: see [docs/collaborator-deploy-guide.md](docs/collaborator-deploy-guide.md).
 
 Run `npm run build` to type-check and compile. `npm run dev` starts only the Vite front end; use `vercel dev` when testing the API.
 
