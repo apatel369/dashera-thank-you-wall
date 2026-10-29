@@ -1,7 +1,7 @@
 import { neon } from "@neondatabase/serverless";
 import { randomBytes } from "node:crypto";
 
-const databaseUrl = process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL;
+const databaseUrl = process.env.PREVIEW_DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL;
 if (!databaseUrl) throw new Error("DATABASE_URL_UNPOOLED or DATABASE_URL is required");
 const sql = neon(databaseUrl);
 

@@ -60,8 +60,10 @@ function demoNotes(): Submission[] {
   });
 }
 
+// Preview deployments get their own Neon database (PREVIEW_* vars exist only in the Preview environment),
+// so testing a pull request never touches the live wall.
 function db() {
-  const url = process.env.DATABASE_URL;
+  const url = process.env.PREVIEW_DATABASE_URL ?? process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL is missing. Connect the Neon database.");
   return neon(url);
 }

@@ -41,8 +41,9 @@ Required Vercel environment variables:
 
 - `ADMIN_PASSWORD`: protects `/admin` and its control API.
 - `DATABASE_URL`: automatically provided by the connected Neon Free database.
+- `PREVIEW_DATABASE_URL`: Preview environment only, from the separate Neon resource `dashera-wall-preview-db`. When set, the app uses it instead of `DATABASE_URL`, so pull request previews never touch the live wall. After a schema change, run the migration against both databases (`npx vercel env pull .env.preview.local --environment=preview` then `node --env-file=.env.preview.local scripts/migrate.mjs`).
 
-The project is linked to the Vercel project `dashera-thank-you-wall` and Neon resource `dashera-wall-db`. The admin password is stored locally outside this project in `../dashera-wall-admin-password.txt` and in Vercel as a secret. Do not commit `.env.local` or the password file.
+The project is linked to the Vercel project `dashera-thank-you-wall` and Neon resources `dashera-wall-db` (production) and `dashera-wall-preview-db` (previews). The admin password is stored locally outside this project in `../dashera-wall-admin-password.txt` and in Vercel as a secret. Do not commit `.env.local` or the password file.
 
 ## Routes
 
