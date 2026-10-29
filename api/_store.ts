@@ -72,9 +72,14 @@ export function storageErrorMessage(error: unknown): string {
   return "Wall database is unavailable";
 }
 
+// Must be at least the longest window below, so pruning never drops a row that is still counting.
+const RATE_LIMIT_RETENTION_MS = 15 * 60 * 1000;
+
 // Fixed-window rate limit keyed by an arbitrary string. Each attempt is reserved atomically before the guarded
 // work runs, so concurrent requests cannot slip past the limit. Returns false once the key exceeds `max` in the window.
+// Expired rows are pruned first so client IPs are kept no longer than the retention window.
 async function reserveRateLimit(key: string, max: number, windowMs: number): Promise<boolean> {
+  await db().query("DELETE FROM rate_limits WHERE window_start < $1", [Date.now() - RATE_LIMIT_RETENTION_MS]);
   const rows = await db().query(
     "INSERT INTO rate_limits (key, hits, window_start) VALUES ($1, 1, $2)" +
     " ON CONFLICT (key) DO UPDATE SET" +
@@ -93,8 +98,8 @@ export async function clearLoginFailures(ip: string): Promise<void> {
   await db().query("DELETE FROM rate_limits WHERE key = $1", [`login:${ip}`]);
 }
 
-// Guest notes: 20 per IP per minute. High enough for guests sharing one network, low enough to stop a scripted flood.
-export const reserveSubmission = (ip: string) => reserveRateLimit(`submit:${ip}`, 20, 60 * 1000);
+// Guest notes: 60 per IP per minute. High enough for many guests behind one carrier or venue IP, low enough to stop a scripted flood.
+export const reserveSubmission = (ip: string) => reserveRateLimit(`submit:${ip}`, 60, 60 * 1000);
 
 export async function getState(): Promise<WallState> {
   const rows = await db().query("SELECT mode, session, changed_at, test_mode FROM wall_state WHERE id = 1");
