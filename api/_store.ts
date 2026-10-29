@@ -60,8 +60,10 @@ function demoNotes(): Submission[] {
   });
 }
 
+// Preview deployments get their own Neon database (PREVIEW_* vars exist only in the Preview environment),
+// so testing a pull request never touches the live wall.
 function db() {
-  const url = process.env.DATABASE_URL;
+  const url = process.env.PREVIEW_DATABASE_URL ?? process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL is missing. Connect the Neon database.");
   return neon(url);
 }
@@ -72,26 +74,34 @@ export function storageErrorMessage(error: unknown): string {
   return "Wall database is unavailable";
 }
 
-const LOGIN_MAX_FAILURES = 5;
-const LOGIN_LOCK_MS = 15 * 60 * 1000;
+// Must be at least the longest window below, so pruning never drops a row that is still counting.
+const RATE_LIMIT_RETENTION_MS = 15 * 60 * 1000;
 
-// Admin login attempts are counted per client IP within a 15-minute window. Each attempt is reserved atomically
-// before the password is checked, so concurrent requests cannot slip past the limit; a successful login clears the count.
-export async function reserveLoginAttempt(ip: string): Promise<boolean> {
+// Fixed-window rate limit keyed by an arbitrary string. Each attempt is reserved atomically before the guarded
+// work runs, so concurrent requests cannot slip past the limit. Returns false once the key exceeds `max` in the window.
+// Expired rows are pruned first so client IPs are kept no longer than the retention window.
+async function reserveRateLimit(key: string, max: number, windowMs: number): Promise<boolean> {
+  await db().query("DELETE FROM rate_limits WHERE window_start < $1", [Date.now() - RATE_LIMIT_RETENTION_MS]);
   const rows = await db().query(
-    "INSERT INTO admin_login_attempts (ip, failures, window_start) VALUES ($1, 1, $2)" +
-    " ON CONFLICT (ip) DO UPDATE SET" +
-    " failures = CASE WHEN $2 - admin_login_attempts.window_start >= $3 THEN 1 ELSE admin_login_attempts.failures + 1 END," +
-    " window_start = CASE WHEN $2 - admin_login_attempts.window_start >= $3 THEN $2 ELSE admin_login_attempts.window_start END" +
-    " RETURNING failures",
-    [ip, Date.now(), LOGIN_LOCK_MS],
+    "INSERT INTO rate_limits (key, hits, window_start) VALUES ($1, 1, $2)" +
+    " ON CONFLICT (key) DO UPDATE SET" +
+    " hits = CASE WHEN $2 - rate_limits.window_start >= $3 THEN 1 ELSE rate_limits.hits + 1 END," +
+    " window_start = CASE WHEN $2 - rate_limits.window_start >= $3 THEN $2 ELSE rate_limits.window_start END" +
+    " RETURNING hits",
+    [key, Date.now(), windowMs],
   );
-  return Number(rows[0].failures) <= LOGIN_MAX_FAILURES;
+  return Number(rows[0].hits) <= max;
 }
+
+// Admin logins: 5 attempts per IP per 15 minutes; a successful login clears the count.
+export const reserveLoginAttempt = (ip: string) => reserveRateLimit(`login:${ip}`, 5, 15 * 60 * 1000);
 
 export async function clearLoginFailures(ip: string): Promise<void> {
-  await db().query("DELETE FROM admin_login_attempts WHERE ip = $1", [ip]);
+  await db().query("DELETE FROM rate_limits WHERE key = $1", [`login:${ip}`]);
 }
+
+// Guest notes: 60 per IP per minute. High enough for many guests behind one carrier or venue IP, low enough to stop a scripted flood.
+export const reserveSubmission = (ip: string) => reserveRateLimit(`submit:${ip}`, 60, 60 * 1000);
 
 export async function getState(): Promise<WallState> {
   const rows = await db().query("SELECT mode, session, changed_at, test_mode FROM wall_state WHERE id = 1");

@@ -54,7 +54,7 @@ Once the `test` check passes and the owner approves the pull request, merge it i
 
 ## Rules
 
-- **Previews share the live database.** Notes you submit on a preview appear on the real wall. On a preview's `/admin`, **Start new session**, **Burn away**, and simply opening `/admin` all change the live projector. Never use `/admin` on a preview during the event.
+- **Previews use their own test database.** Notes and admin actions on a preview never reach the live wall, so test freely there. Production `/admin` is different: simply opening it resets the live wall, so never touch it during the event.
 - **The admin password comes from the owner directly.** Never paste it in a pull request, issue, commit, or chat channel.
 - **Never commit secrets.** `.env*` files are ignored; keep it that way.
 - **Leave `.github/workflows/` and `vercel.json` alone** unless the owner agrees. They control how and where the site deploys.

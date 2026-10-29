@@ -1,7 +1,7 @@
 import { neon } from "@neondatabase/serverless";
 import { randomBytes } from "node:crypto";
 
-const databaseUrl = process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL;
+const databaseUrl = process.env.PREVIEW_DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL;
 if (!databaseUrl) throw new Error("DATABASE_URL_UNPOOLED or DATABASE_URL is required");
 const sql = neon(databaseUrl);
 
@@ -45,9 +45,9 @@ await sql.query(
   " ON wall_approval_batches (session, created_at, id)",
 );
 await sql.query(
-  "CREATE TABLE IF NOT EXISTS admin_login_attempts (" +
-  " ip TEXT PRIMARY KEY," +
-  " failures INTEGER NOT NULL," +
+  "CREATE TABLE IF NOT EXISTS rate_limits (" +
+  " key TEXT PRIMARY KEY," +
+  " hits INTEGER NOT NULL," +
   " window_start BIGINT NOT NULL" +
   ")",
 );
