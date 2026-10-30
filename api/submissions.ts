@@ -32,9 +32,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(409).json({ error: "This QR code has expired. Please scan the code on the display again." });
       }
       const input = parseInput(req.body);
-      if (!input) return res.status(400).json({ error: "Invalid sticky note" });
+      if (!input) return res.status(400).json({ error: "Invalid cracker submission" });
       if (!(await reserveSubmission(clientIp(req)))) {
-        return res.status(429).json({ error: "You're adding notes very quickly. Please wait a minute and try again." });
+        return res.status(429).json({ error: "You're adding crackers very quickly. Please wait a minute and try again." });
       }
       return res.status(201).json(await addSubmission(input, state.session));
     }
