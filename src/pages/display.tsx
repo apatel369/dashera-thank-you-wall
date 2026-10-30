@@ -10,11 +10,11 @@ import { enableSound, isSoundEnabled, toggleSound as toggleSoundAudio, playCue, 
 
 // ── Grid geometry (responsive) ───────────────────────────────────────────────
 
-const TARGET_W = 145;
-const TARGET_H = 165;
-const LARGE_PROJECTOR_TARGET_W = 190;
-const LARGE_PROJECTOR_TARGET_H = 220;
-const GRID_GAP = 12;
+const TARGET_W = 115;
+const TARGET_H = 135;
+const LARGE_PROJECTOR_TARGET_W = 150;
+const LARGE_PROJECTOR_TARGET_H = 175;
+const GRID_GAP = 10;
 const POLL_INTERVAL_MS = 2500;
 const LEAD_IN_MS = 3000;
 const SHOW_MS = 20000;
@@ -26,12 +26,21 @@ function computeGridDims(w: number, h: number, padX: number, padY: number) {
   const targetH = w >= 2500 ? LARGE_PROJECTOR_TARGET_H : TARGET_H;
 
   let rawCols = Math.floor((w - 2 * padX + GRID_GAP) / (targetW + GRID_GAP));
-  // Guarantee an even number of columns (minimum 6) so left and right are symmetrically balanced around the center 2 columns
+  // Guarantee an even number of columns so left and right are symmetrically balanced around the center 2 columns
   if (rawCols % 2 !== 0) rawCols--;
-  const cols = Math.max(6, rawCols);
+  let cols = Math.max(10, rawCols);
 
   let rawRows = Math.floor((h - 2 * padY + GRID_GAP) / (targetH + GRID_GAP));
-  const rows = Math.max(3, rawRows);
+  let rows = Math.max(5, rawRows);
+
+  // Guarantee that (cols - 2) * rows is AT LEAST 40 tickets on screen
+  while ((cols - 2) * rows < 40) {
+    if ((cols - 2) * (rows + 1) >= 40) {
+      rows++;
+    } else {
+      cols += 2;
+    }
+  }
 
   return { cols, rows };
 }
@@ -54,7 +63,7 @@ function validColumns(cols: number): number[] {
 function slotMeta(idx: number) {
   const h = Math.imul(idx + 1, 2654435761) >>> 0;
   return {
-    dy: ((h >> 16 & 0xFF) / 255) * 16 - 8,
+    dy: ((h >> 16 & 0xFF) / 255) * 6 - 3,
   };
 }
 
@@ -335,7 +344,7 @@ export default function Display() {
     typeof window !== "undefined" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const { cols, rows, height } = useGridDims(0, 0);
+  const { cols, rows, height } = useGridDims(10, 10);
   const columns = useMemo(() => validColumns(cols), [cols]);
   const positions = useMemo(() => slotPositions(cols, rows), [cols, rows]);
   const slotCountRef = useRef(positions.length);
@@ -575,6 +584,7 @@ export default function Display() {
   const gridStyle: React.CSSProperties = {
     position: "absolute",
     inset: 0,
+    padding: "10px",
     display: "grid",
     gridTemplateColumns: `repeat(${cols}, 1fr)`,
     gridTemplateRows: `repeat(${rows}, 1fr)`,
@@ -614,8 +624,8 @@ export default function Display() {
               src={CENTER_ART}
               alt="A glowing Diwali diya"
               style={{
-                maxWidth: "min(520px, 28vw)",
-                maxHeight: "min(420px, 32vh)",
+                maxWidth: "min(380px, 22vw)",
+                maxHeight: "min(280px, 26vh)",
                 width: "100%",
                 height: "auto",
                 objectFit: "contain",
@@ -751,7 +761,7 @@ export default function Display() {
       {isTopLevel && (
         <button
           onClick={handleToggleSound}
-          className="absolute bottom-4 left-4 z-40 px-3.5 py-1.5 rounded-full bg-slate-900/80 hover:bg-slate-800 text-amber-200 text-sm font-medium border border-amber-500/30 shadow-lg backdrop-blur flex items-center gap-1.5 transition-colors cursor-pointer"
+          className="absolute bottom-2 left-2 z-40 px-2.5 py-1 rounded-full bg-slate-900/80 hover:bg-slate-800 text-amber-200 text-xs font-medium border border-amber-500/30 shadow-lg backdrop-blur flex items-center gap-1.5 transition-colors cursor-pointer"
           title="Toggle fireworks sound"
         >
           <span>{soundOn ? "🔊" : "🔇"}</span>
