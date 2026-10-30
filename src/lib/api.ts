@@ -1,7 +1,10 @@
+import type { CrackerType } from "./crackers.ts";
+
 export type Submission = {
   id: number;
   message: string;
   colorStyle: "golden" | "rose" | "deepBlue" | "forestGreen";
+  cracker: CrackerType;
   fontStyle: string;
   borderStyle: string;
   texture: "plain" | "ruled" | "dotted";
@@ -14,7 +17,7 @@ export type Submission = {
 
 export type WallState = { mode: "qr" | "wall" | "scroll" | "burn"; session: string; changedAt: number; testMode: boolean };
 export type SubmissionCursor = { createdAt: string; id: number };
-export type SubmissionList = { items: Submission[]; total: number; state: WallState; reset: boolean; cursor: SubmissionCursor | null };
+export type SubmissionList = { items: Submission[]; total: number; state: WallState; reset: boolean; cursor: SubmissionCursor | null; serverTime: number };
 
 async function json<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await fetch(url, { cache: "no-store", credentials: "same-origin", ...options });
@@ -39,7 +42,7 @@ export const listSubmissions = (admin = false, session?: string, cursor?: Submis
   }
   return json<SubmissionList>(`/api/submissions${query.size ? `?${query}` : ""}`);
 };
-export const createSubmission = (data: Pick<Submission, "message" | "colorStyle" | "texture" | "fontColor" | "symbol"> & { session?: string }) =>
+export const createSubmission = (data: Pick<Submission, "message" | "colorStyle" | "cracker"> & { session?: string }) =>
   json<Submission>("/api/submissions", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

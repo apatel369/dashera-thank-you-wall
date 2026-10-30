@@ -22,6 +22,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         items, total: items.length, state, reset: !incremental,
         cursor: last ? { createdAt: last.createdAt, id: last.id } :
           incremental ? { createdAt: afterAt, id: afterId } : null,
+        serverTime: Date.now(),
       });
     }
     if (req.method === "POST") {

@@ -4,10 +4,12 @@ import { randomBytes } from "node:crypto";
 export type WallMode = "qr" | "wall" | "scroll" | "burn";
 export type WallState = { mode: WallMode; session: string; changedAt: number; testMode: boolean };
 export type ApprovalBatch = { id: string; noteIds: number[]; createdAt: number };
+export type CrackerType = "anar" | "chakri" | "rocket" | "phuljhari" | "bomb";
 export type Submission = {
   id: number;
   message: string;
   colorStyle: "golden" | "rose" | "deepBlue" | "forestGreen";
+  cracker: CrackerType;
   fontStyle: string;
   borderStyle: string;
   texture: "plain" | "ruled" | "dotted";
@@ -22,14 +24,29 @@ const initialState: WallState = { mode: "wall", session: "initial", changedAt: 0
 
 export class WallConflictError extends Error {}
 
+const CRACKER_TYPES: CrackerType[] = ["anar", "chakri", "rocket", "phuljhari", "bomb"];
+
 const DEMO_MESSAGES = [
-  "Let kindness lead today", "Leave anger behind", "Choose patience over pride",
-  "Carry gratitude forward", "Listen with an open heart", "Celebrate the good in others",
-  "Let courage replace fear", "Share a moment of joy", "Make room for forgiveness",
-  "Speak with compassion", "Release what weighs you down", "Welcome a fresh beginning",
-  "Offer help without asking", "Remember the strength of community", "Let hope shine brightly",
-  "Choose humility today", "Turn a challenge into growth", "Be generous with your time",
-  "Find peace in the present", "Bring light to someone’s day",
+  "Kindness and warmth to all",
+  "Patience with family and friends",
+  "Gratitude every single day",
+  "Forgiving quickly and loving deeply",
+  "Spreading joy wherever I go",
+  "Letting go of anger and ego",
+  "Sharing light in dark moments",
+  "Helping someone without being asked",
+  "Peace and harmony in my home",
+  "Speaking gently and honestly",
+  "Courage to choose what is right",
+  "Welcoming every new beginning",
+  "Celebrating the good in others",
+  "Being generous with my time",
+  "Living with hope and positivity",
+  "Staying humble in all success",
+  "Bringing a smile to someone’s face",
+  "Cultivating selfless devotion",
+  "Listening with an open heart",
+  "Light, love, and prosperity for all",
 ];
 
 function demoNotes(): Submission[] {
@@ -44,10 +61,12 @@ function demoNotes(): Submission[] {
     do { id = Number.parseInt(randomBytes(6).toString("hex"), 16); } while (ids.has(id));
     ids.add(id);
     const colorStyle = colors[index % colors.length];
+    const cracker = CRACKER_TYPES[index % CRACKER_TYPES.length];
     return {
       id,
       message: `Demo ${String(index + 1).padStart(3, "0")} · ${DEMO_MESSAGES[index % DEMO_MESSAGES.length]}`,
       colorStyle,
+      cracker,
       fontStyle: colorStyle,
       borderStyle: "simple",
       texture: textures[index % textures.length],
@@ -199,6 +218,7 @@ export async function endTest(expectedSession: string): Promise<WallState> {
 }
 
 const colors = new Set(["golden", "rose", "deepBlue", "forestGreen"]);
+const crackers = new Set(["anar", "chakri", "rocket", "phuljhari", "bomb"]);
 const textures = new Set(["plain", "ruled", "dotted"]);
 const inks = new Set(["warm", "crimson", "indigo", "forest", "ink"]);
 const symbols = new Set(["none", "namaste", "heart", "hug"]);
@@ -207,17 +227,20 @@ export function parseInput(raw: unknown): Omit<Submission, "id" | "createdAt" | 
   if (!raw || typeof raw !== "object") return null;
   const input = raw as Record<string, unknown>;
   const message = typeof input.message === "string" ? input.message.trim() : "";
-  if (!message || message.length > 120) return null;
-  if (!colors.has(String(input.colorStyle)) || !textures.has(String(input.texture)) ||
-      !inks.has(String(input.fontColor)) || !symbols.has(String(input.symbol))) return null;
+  if (!message || message.length > 80) return null;
+  if (!colors.has(String(input.colorStyle)) || !crackers.has(String(input.cracker))) return null;
+  const texture = textures.has(String(input.texture)) ? (input.texture as Submission["texture"]) : "plain";
+  const fontColor = inks.has(String(input.fontColor)) ? (input.fontColor as Submission["fontColor"]) : "warm";
+  const symbol = symbols.has(String(input.symbol)) ? (input.symbol as Submission["symbol"]) : "none";
   return {
     message,
     colorStyle: input.colorStyle as Submission["colorStyle"],
+    cracker: input.cracker as CrackerType,
     fontStyle: String(input.colorStyle),
     borderStyle: "simple",
-    texture: input.texture as Submission["texture"],
-    fontColor: input.fontColor as Submission["fontColor"],
-    symbol: input.symbol as Submission["symbol"],
+    texture,
+    fontColor,
+    symbol,
   };
 }
 
