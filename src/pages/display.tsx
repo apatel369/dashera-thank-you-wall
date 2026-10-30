@@ -608,32 +608,34 @@ export default function Display() {
       }}
     >
       <div className="absolute inset-0">
-        {/* Center Artwork */}
-        <div style={{ ...gridStyle, zIndex: 0 }}>
-          <div
-            style={{
-              gridColumn: `${cStart + 1} / ${cStart + 3}`,
-              gridRow: `${rStart + 1} / ${rStart + 3}`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              pointerEvents: "none",
-            }}
-          >
-            <img
-              src={CENTER_ART}
-              alt="A glowing Diwali diya"
+        {/* Center Artwork (hidden during aftermath so it does not collide with text) */}
+        {burnPhase !== "aftermath" && (
+          <div style={{ ...gridStyle, zIndex: 0 }}>
+            <div
               style={{
-                maxWidth: "min(380px, 22vw)",
-                maxHeight: "min(280px, 26vh)",
-                width: "100%",
-                height: "auto",
-                objectFit: "contain",
-                filter: "drop-shadow(0 0 25px rgba(245, 158, 11, 0.4))",
+                gridColumn: `${cStart + 1} / ${cStart + 3}`,
+                gridRow: `${rStart + 1} / ${rStart + 3}`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                pointerEvents: "none",
               }}
-            />
+            >
+              <img
+                src={CENTER_ART}
+                alt="A glowing Diwali diya"
+                style={{
+                  maxWidth: "min(380px, 22vw)",
+                  maxHeight: "min(280px, 26vh)",
+                  width: "100%",
+                  height: "auto",
+                  objectFit: "contain",
+                  filter: "drop-shadow(0 0 25px rgba(245, 158, 11, 0.4))",
+                }}
+              />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Crackers Grid */}
         {showCrackers && (
@@ -712,34 +714,43 @@ export default function Display() {
 
       {/* Aftermath Celebration */}
       {isBurn && burnPhase === "aftermath" && (
-        <div className="pointer-events-none absolute inset-0 z-30 flex flex-col items-center justify-between p-8 md:p-12">
+        <div className="pointer-events-none absolute inset-0 z-30 flex flex-col items-center justify-between p-6 md:p-10 select-none">
           {/* Top floating gold sparks */}
-          <div className="relative w-full flex-1 flex items-center justify-center overflow-hidden">
-            {Array.from({ length: 10 }).map((_, i) => (
+          <div className="relative w-full flex-1 flex flex-col items-center justify-center overflow-hidden">
+            {Array.from({ length: 12 }).map((_, i) => (
               <div
                 key={i}
                 className="float-up absolute w-2.5 h-2.5 rounded-full bg-amber-300 shadow-[0_0_12px_#f59e0b]"
                 style={{
-                  left: `${8 + i * 9}%`,
-                  bottom: `${15 + (i % 4) * 12}%`,
-                  animationDelay: `${i * 0.55}s`,
+                  left: `${6 + i * 8}%`,
+                  bottom: `${10 + (i % 5) * 14}%`,
+                  animationDelay: `${i * 0.45}s`,
                 }}
               />
             ))}
 
-            {/* Centered Glowing Aftermath Title */}
-            <div className="flex flex-col items-center text-center px-4">
+            {/* Glowing Aftermath Title & Message */}
+            <div className="flex flex-col items-center text-center px-4 max-w-4xl z-10">
               <h1 className="aftermath-title text-6xl md:text-8xl lg:text-9xl font-serif font-black tracking-wider leading-tight">
                 {AFTERMATH_TEXT}
               </h1>
-              <p className="mt-4 text-amber-200/80 font-serif italic text-lg md:text-2xl tracking-wide max-w-xl">
+              <p className="mt-4 text-amber-200/90 font-serif italic text-lg md:text-2xl lg:text-3xl tracking-wide max-w-2xl drop-shadow-md">
                 May the lights of Diwali bring happiness, peace, and prosperity to all.
               </p>
+
+              {/* Diya symbol placed gracefully below the text with generous space */}
+              <div className="mt-8 md:mt-10 flex flex-col items-center">
+                <img
+                  src={CENTER_ART}
+                  alt="Diwali Diya"
+                  className="w-36 h-28 md:w-52 md:h-40 object-contain drop-shadow-[0_0_30px_rgba(245,158,11,0.7)] diya-flicker"
+                />
+              </div>
             </div>
           </div>
 
           {/* Bottom row of 7 flickering diyas */}
-          <div className="w-full max-w-4xl flex items-center justify-around px-4 pb-4">
+          <div className="w-full max-w-4xl flex items-center justify-around px-4 pb-2">
             {Array.from({ length: 7 }).map((_, i) => (
               <div
                 key={i}
@@ -749,7 +760,7 @@ export default function Display() {
                 <img
                   src={CENTER_ART}
                   alt="Diwali Diya"
-                  className="w-14 h-14 md:w-20 md:h-20 object-contain drop-shadow-[0_0_15px_rgba(245,158,11,0.7)]"
+                  className="w-12 h-12 md:w-16 md:h-16 object-contain drop-shadow-[0_0_15px_rgba(245,158,11,0.7)]"
                 />
               </div>
             ))}
