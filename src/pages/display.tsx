@@ -119,6 +119,7 @@ const WallSlot = React.memo(function WallSlot({
         id={note.sub.id}
         lit={lit}
         spent={spent}
+        largeFont={true}
       />
     </div>
   );
@@ -263,6 +264,7 @@ function ScrollingNotes({
                   color={(card.note.sub.colorStyle ?? "golden") as CrackerColor}
                   type={card.note.sub.cracker ?? crackerForId(card.note.sub.id)}
                   id={card.note.sub.id}
+                  largeFont={true}
                 />
               </div>
             ))}

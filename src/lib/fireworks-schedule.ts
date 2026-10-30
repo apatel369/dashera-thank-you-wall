@@ -17,15 +17,16 @@ export type ShowItem = { slot: number; type: CrackerType };
 export type Ignition = { slot: number; type: CrackerType; igniteAt: number; endAt: number };
 
 const WINDOWS: Record<CrackerType, { start: number; end: number; duration: number }> = {
-  phuljhari: { start: 0, end: 3000, duration: 4000 },
-  chakri:    { start: 2500, end: 8000, duration: 5000 },
-  anar:      { start: 5000, end: 12000, duration: 5500 },
-  rocket:    { start: 8000, end: 14500, duration: 2600 },
+  phuljhari: { start: 0, end: 3000, duration: 2500 },
+  chakri:    { start: 2500, end: 8000, duration: 2800 },
+  anar:      { start: 5000, end: 12000, duration: 3000 },
+  rocket:    { start: 8000, end: 14500, duration: 2200 },
   bomb:      { start: 11000, end: 16000, duration: 1200 },
 };
 
 /**
  * Returns one ignition per item. Times are ms from the start of the show (0 to SHOW_MS).
+ * Groups crackers into batches of ~5 so crackers burst together and the wall clears quickly.
  * Deterministic for a given seed.
  */
 export function buildIgnitions(seed: number, items: ShowItem[]): Ignition[] {
@@ -63,14 +64,19 @@ export function buildIgnitions(seed: number, items: ShowItem[]): Ignition[] {
     const win = WINDOWS[type];
     const n = list.length;
     const windowSpan = win.end - win.start;
-    const step = n > 1 ? windowSpan / (n - 1) : 0;
+    // Batch in groups of 5 so 5 crackers burn together
+    const batchSize = 5;
+    const numBatches = Math.max(1, Math.ceil(n / batchSize));
+    const step = numBatches > 1 ? windowSpan / (numBatches - 1) : 0;
 
     for (let i = 0; i < n; i++) {
-      let base = n === 1 ? win.start + (win.end - win.start) * 0.5 : win.start + i * step;
-      // Add jitter of +/- 15% of the spacing
-      const jitterMax = step > 0 ? step * 0.15 : 100;
+      const batchIdx = Math.floor(i / batchSize);
+      let base = numBatches === 1 ? win.start + windowSpan * 0.5 : win.start + batchIdx * step;
+      // Stagger slightly (15ms) within the batch of 5 so they ignite virtually simultaneously as a volley
+      const intraBatchOffset = (i % batchSize) * 15;
+      const jitterMax = step > 0 ? Math.min(step * 0.08, 40) : 30;
       const jitter = (rand() * 2 - 1) * jitterMax;
-      let igniteAt = Math.round(base + jitter);
+      let igniteAt = Math.round(base + intraBatchOffset + jitter);
 
       // Clamp within window
       if (igniteAt < win.start) igniteAt = win.start;
@@ -99,23 +105,24 @@ export function buildIgnitions(seed: number, items: ShowItem[]): Ignition[] {
   ignitions.sort((a, b) => a.igniteAt - b.igniteAt);
 
   // Ensure overall rate is smoothed so peak starts per second <= 8
-  // Sliding window check: for each 1000ms window, if count > 7, shift later ones slightly
-  for (let i = 0; i < ignitions.length; i++) {
-    const current = ignitions[i];
-    let startsInWindow = 0;
-    for (let j = 0; j < i; j++) {
-      if (ignitions[j].igniteAt >= current.igniteAt - 900 && ignitions[j].igniteAt <= current.igniteAt) {
-        startsInWindow++;
+  // Check sliding 1-second window and enforce maximum 7 starts before any item
+  for (let pass = 0; pass < 5; pass++) {
+    let adjusted = false;
+    for (let i = 0; i < ignitions.length; i++) {
+      const cur = ignitions[i];
+      const inWindow = ignitions.filter(
+        (ig, idx) => idx < i && ig.igniteAt > cur.igniteAt - 1000 && ig.igniteAt <= cur.igniteAt,
+      );
+      if (inWindow.length >= 7) {
+        const oldest = inWindow[0];
+        cur.igniteAt = oldest.igniteAt + 1010;
+        cur.endAt = Math.min(SHOW_MS - 500, cur.igniteAt + WINDOWS[cur.type].duration);
+        adjusted = true;
       }
     }
-    if (startsInWindow >= 7) {
-      current.igniteAt = Math.min(SHOW_MS - current.endAt + current.igniteAt - 500, current.igniteAt + 140);
-      current.endAt = Math.min(SHOW_MS - 500, current.igniteAt + WINDOWS[current.type].duration);
-    }
+    ignitions.sort((a, b) => a.igniteAt - b.igniteAt);
+    if (!adjusted) break;
   }
-
-  // Re-sort after smoothing
-  ignitions.sort((a, b) => a.igniteAt - b.igniteAt);
 
   return ignitions;
 }

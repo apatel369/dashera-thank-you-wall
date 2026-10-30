@@ -242,6 +242,7 @@ export default function Home() {
                 id={submittedSubmission.id}
                 lit={isLit}
                 spent={isSpent}
+                largeFont={true}
               />
             </div>
 

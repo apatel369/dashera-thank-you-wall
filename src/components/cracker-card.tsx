@@ -11,6 +11,7 @@ export interface CrackerCardProps {
   id?: number;
   className?: string;
   style?: React.CSSProperties;
+  largeFont?: boolean;
 }
 
 export function CrackerCard({
@@ -22,6 +23,7 @@ export function CrackerCard({
   id = 0,
   className = "",
   style,
+  largeFont = false,
 }: CrackerCardProps): React.JSX.Element {
   const palette = CRACKER_PALETTE[color] ?? CRACKER_PALETTE.golden;
 
@@ -40,7 +42,7 @@ export function CrackerCard({
       }}
       data-testid="preview-card"
     >
-      {/* Top ~58%: CrackerArt */}
+      {/* Top ~55%: CrackerArt */}
       <div className="w-full flex-1 min-h-0 flex items-center justify-center p-1 overflow-visible">
         <CrackerArt
           type={type}
@@ -50,9 +52,9 @@ export function CrackerCard({
         />
       </div>
 
-      {/* Bottom: Paper label */}
+      {/* Bottom: Paper label with prominent message */}
       <div
-        className="w-full mt-1.5 px-2.5 py-1.5 rounded-lg shadow-sm flex flex-col items-center justify-center text-center overflow-hidden"
+        className="w-full mt-1.5 px-3 py-2 rounded-xl shadow-sm flex flex-col items-center justify-center text-center overflow-hidden"
         style={{
           backgroundColor: palette.tint,
           border: `2px solid ${palette.dark}59`,
@@ -60,21 +62,28 @@ export function CrackerCard({
         }}
       >
         <span
-          className="italic text-center leading-tight mb-0.5"
+          className="italic text-center font-medium leading-tight mb-0.5 tracking-wide"
           style={{
-            fontSize: "clamp(0.48rem, 0.43vw, 0.72rem)",
-            opacity: 0.65,
+            fontSize: largeFont
+              ? "clamp(0.72rem, 0.65vw, 1.15rem)"
+              : "clamp(0.55rem, 0.48vw, 0.85rem)",
+            opacity: 0.8,
           }}
         >
           I will light up...
         </span>
         <p
-          className="font-caveat font-semibold leading-tight break-words text-center line-clamp-3 overflow-hidden w-full m-0"
+          className="font-caveat font-bold leading-tight break-words text-center line-clamp-3 overflow-hidden w-full m-0"
           style={{
-            fontSize: isLong
-              ? "clamp(0.85rem, 0.72vw, 1.45rem)"
-              : "clamp(1rem, 0.85vw, 1.9rem)",
+            fontSize: largeFont
+              ? isLong
+                ? "clamp(1.2rem, 1.05vw, 2.25rem)"
+                : "clamp(1.45rem, 1.3vw, 2.75rem)"
+              : isLong
+                ? "clamp(0.95rem, 0.8vw, 1.65rem)"
+                : "clamp(1.15rem, 0.95vw, 2.15rem)",
             color: palette.dark,
+            lineHeight: 1.16,
           }}
         >
           {message}
