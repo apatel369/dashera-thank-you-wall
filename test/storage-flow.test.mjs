@@ -7,13 +7,22 @@ if (process.env.TEST_DATABASE_URL) process.env.DATABASE_URL = process.env.TEST_D
 const store = await import("../api/_store.ts");
 
 const sample = {
-  message: "Let go of anger", colorStyle: "golden", texture: "plain",
-  fontColor: "warm", symbol: "none",
+  message: "Let go of anger", colorStyle: "golden", cracker: "anar",
+  texture: "plain", fontColor: "warm", symbol: "none",
 };
 
 test("input validation", () => {
   assert.equal(store.parseInput({ message: "   " }), null);
-  assert.equal(store.parseInput({ ...sample, message: "x".repeat(121) }), null);
+  assert.equal(store.parseInput({ ...sample, message: "x".repeat(81) }), null);
+  assert.equal(store.parseInput({ ...sample, message: "x".repeat(80) })?.message, "x".repeat(80));
+  assert.equal(store.parseInput({ ...sample, cracker: "invalid" }), null);
+  const minimal = { message: "Peace and light", colorStyle: "golden", cracker: "rocket" };
+  const parsedMinimal = store.parseInput(minimal);
+  assert.ok(parsedMinimal);
+  assert.equal(parsedMinimal.texture, "plain");
+  assert.equal(parsedMinimal.fontColor, "warm");
+  assert.equal(parsedMinimal.symbol, "none");
+  assert.equal(parsedMinimal.cracker, "rocket");
   assert.equal(store.parseInput(sample)?.message, sample.message);
 });
 
@@ -55,6 +64,8 @@ test("test mode seeds, switches display modes, pauses guests, and restores real 
     assert.equal(notes.length, 100);
     assert.equal(new Set(notes.map(note => note.id)).size, 100);
     assert.ok(notes.every(note => /^Demo \d{3} · /.test(note.message)));
+    assert.ok(notes.every(note => note.message.length <= 80));
+    assert.equal(new Set(notes.map(note => note.cracker)).size, 5);
     assert.equal(new Set(notes.map(note => note.colorStyle)).size, 4);
     await assert.rejects(store.addSubmission(store.parseInput(sample), original.session), /paused/);
     await assert.rejects(store.setMode("qr"), /End test mode/);

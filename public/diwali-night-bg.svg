@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" width="100%" height="100%">
+  <defs>
+    <linearGradient id="nightSky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#070714"/>
+      <stop offset="50%" stop-color="#0c0c24"/>
+      <stop offset="85%" stop-color="#14112e"/>
+      <stop offset="100%" stop-color="#1f1430"/>
+    </linearGradient>
+    <radialGradient id="bottomGlow" cx="50%" cy="100%" r="65%">
+      <stop offset="0%" stop-color="#d97706" stop-opacity="0.22"/>
+      <stop offset="45%" stop-color="#b45309" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#0c0c24" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- Background gradient -->
+  <rect width="1920" height="1080" fill="url(#nightSky)"/>
+  <!-- Stars -->
+  <g id="stars">
+  <circle cx='579.6' cy='633.3' r='0.63' fill='#ffffff' opacity='0.37'/>
+  <circle cx='1506.9' cy='679.8' r='1.75' fill='#ffffff' opacity='0.69'/>
+  <circle cx='541.5' cy='610.8' r='1.07' fill='#ffffff' opacity='0.78'/>
+  <circle cx='38' cy='690.4' r='0.9' fill='#ffffff' opacity='0.68'/>
+  <circle cx='790.8' cy='828.5' r='1.24' fill='#ffffff' opacity='0.74'/>
+  <circle cx='1038.1' cy='254.6' r='1.68' fill='#ffffff' opacity='0.58'/>
+  <circle cx='1051.8' cy='307.4' r='1.36' fill='#ffffff' opacity='0.42'/>
+  <circle cx='1478.4' cy='676.7' r='0.69' fill='#ffffff' opacity='0.57'/>
+  <circle cx='158.8' cy='668.3' r='1.74' fill='#ffffff' opacity='0.48'/>
+  <circle cx='771.5' cy='546.8' r='1.27' fill='#ffffff' opacity='0.4'/>
+  <circle cx='891.4' cy='507.2' r='1.63' fill='#ffffff' opacity='0.72'/>
+  <circle cx='831.2' cy='827.3' r='1.11' fill='#ffffff' opacity='0.63'/>
+  <circle cx='1293.4' cy='190.1' r='1.75' fill='#ffffff' opacity='0.57'/>
+  <circle cx='870.4' cy='104.5' r='0.88' fill='#ffffff' opacity='0.25'/>
+  <circle cx='1626.3' cy='439.6' r='1.37' fill='#ffffff' opacity='0.53'/>
+  <circle cx='321.7' cy='588.3' r='1.69' fill='#ffffff' opacity='0.57'/>
+  <circle cx='1243.3' cy='755.4' r='1.49' fill='#ffffff' opacity='0.4'/>
+  <circle cx='1660.2' cy='761.1' r='0.91' fill='#ffffff' opacity='0.75'/>
+  <circle cx='793.5' cy='259.9' r='0.94' fill='#ffffff' opacity='0.86'/>
+  <circle cx='847.9' cy='152' r='0.69' fill='#ffffff' opacity='0.62'/>
+  <circle cx='1798.4' cy='46.5' r='1.31' fill='#ffffff' opacity='0.61'/>
+  <circle cx='1608' cy='494.3' r='0.65' fill='#ffffff' opacity='0.87'/>
+  <circle cx='1065.6' cy='803.4' r='1.21' fill='#ffffff' opacity='0.83'/>
+  <circle cx='0.3' cy='117.4' r='0.67' fill='#ffffff' opacity='0.75'/>
+  <circle cx='1327.2' cy='316.2' r='0.69' fill='#ffffff' opacity='0.6'/>
+  <circle cx='448.3' cy='162.6' r='1.46' fill='#ffffff' opacity='0.76'/>
+  <circle cx='1849.1' cy='161.6' r='0.69' fill='#ffffff' opacity='0.35'/>
+  <circle cx='1610.5' cy='244.2' r='1.27' fill='#ffffff' opacity='0.68'/>
+  <circle cx='845.8' cy='58.3' r='1.18' fill='#ffffff' opacity='0.32'/>
+  <circle cx='195.1' cy='305.2' r='1.38' fill='#ffffff' opacity='0.29'/>
+  <circle cx='1618.7' cy='663' r='1.41' fill='#ffffff' opacity='0.85'/>
+  <circle cx='738.5' cy='319.5' r='1.52' fill='#ffffff' opacity='0.43'/>
+  <circle cx='473.3' cy='435.3' r='0.9' fill='#ffffff' opacity='0.3'/>
+  <circle cx='205.8' cy='452.5' r='1.01' fill='#ffffff' opacity='0.73'/>
+  <circle cx='656.7' cy='690.5' r='1.3' fill='#ffffff' opacity='0.67'/>
+  <circle cx='970.2' cy='763.4' r='0.75' fill='#ffffff' opacity='0.42'/>
+  <circle cx='737.9' cy='716.2' r='1.13' fill='#ffffff' opacity='0.86'/>
+  <circle cx='1250.9' cy='804.5' r='1.4' fill='#ffffff' opacity='0.47'/>
+  <circle cx='1389.3' cy='4.8' r='1.44' fill='#ffffff' opacity='0.54'/>
+  <circle cx='984.4' cy='674.2' r='1.07' fill='#ffffff' opacity='0.63'/>
+  <circle cx='809.6' cy='680.8' r='1.68' fill='#ffffff' opacity='0.46'/>
+  <circle cx='66.3' cy='417.5' r='1.27' fill='#ffffff' opacity='0.84'/>
+  <circle cx='1396.8' cy='630' r='1.52' fill='#ffffff' opacity='0.44'/>
+  <circle cx='1489.4' cy='0.9' r='1.27' fill='#ffffff' opacity='0.86'/>
+  <circle cx='1265.3' cy='349.2' r='1.24' fill='#ffffff' opacity='0.6'/>
+  <circle cx='1788.8' cy='711.3' r='1.35' fill='#ffffff' opacity='0.45'/>
+  <circle cx='1615.8' cy='782.4' r='1.02' fill='#ffffff' opacity='0.32'/>
+  <circle cx='1595.9' cy='754.4' r='0.88' fill='#ffffff' opacity='0.61'/>
+  <circle cx='804' cy='846.7' r='0.87' fill='#ffffff' opacity='0.71'/>
+  <circle cx='1914.4' cy='675.1' r='0.88' fill='#ffffff' opacity='0.83'/>
+  <circle cx='540.7' cy='455.6' r='0.84' fill='#ffffff' opacity='0.84'/>
+  <circle cx='337.3' cy='324' r='1.27' fill='#ffffff' opacity='0.72'/>
+  <circle cx='854.2' cy='642.8' r='1.55' fill='#ffffff' opacity='0.32'/>
+  <circle cx='495.3' cy='723.8' r='1.39' fill='#ffffff' opacity='0.63'/>
+  <circle cx='340.5' cy='510.8' r='1.18' fill='#ffffff' opacity='0.32'/>
+  <circle cx='278.7' cy='390.5' r='0.69' fill='#ffffff' opacity='0.8'/>
+  <circle cx='976.5' cy='188.7' r='1.64' fill='#ffffff' opacity='0.76'/>
+  <circle cx='1488.5' cy='727.9' r='1.74' fill='#ffffff' opacity='0.81'/>
+  <circle cx='341.1' cy='545.7' r='0.91' fill='#ffffff' opacity='0.51'/>
+  <circle cx='1214.7' cy='606.3' r='0.75' fill='#ffffff' opacity='0.55'/>
+  <circle cx='698.9' cy='529.9' r='1.39' fill='#ffffff' opacity='0.3'/>
+  <circle cx='178.5' cy='111.2' r='0.95' fill='#ffffff' opacity='0.62'/>
+  <circle cx='653.8' cy='544.7' r='1.23' fill='#ffffff' opacity='0.51'/>
+  <circle cx='593.4' cy='101.3' r='1.5' fill='#ffffff' opacity='0.78'/>
+  <circle cx='881.4' cy='309.5' r='1.08' fill='#ffffff' opacity='0.87'/>
+  <circle cx='980.6' cy='660.4' r='1.74' fill='#ffffff' opacity='0.63'/>
+  <circle cx='1551.9' cy='790.3' r='1.71' fill='#ffffff' opacity='0.65'/>
+  <circle cx='1134.8' cy='221' r='1.74' fill='#ffffff' opacity='0.55'/>
+  <circle cx='914.9' cy='21.1' r='1.5' fill='#ffffff' opacity='0.59'/>
+  <circle cx='1541.1' cy='1.7' r='1.5' fill='#ffffff' opacity='0.5'/>
+  <circle cx='1787.6' cy='257.8' r='1.13' fill='#ffffff' opacity='0.34'/>
+  <circle cx='632.4' cy='469' r='1.27' fill='#ffffff' opacity='0.29'/>
+  <circle cx='1716.5' cy='372.5' r='1.72' fill='#ffffff' opacity='0.42'/>
+  <circle cx='598.3' cy='145.1' r='1.74' fill='#ffffff' opacity='0.63'/>
+  <circle cx='1298.2' cy='57.9' r='0.92' fill='#ffffff' opacity='0.36'/>
+  <circle cx='396.6' cy='573.7' r='1.77' fill='#ffffff' opacity='0.3'/>
+  <circle cx='1322.1' cy='53.6' r='1.7' fill='#ffffff' opacity='0.43'/>
+  <circle cx='708.9' cy='192.3' r='0.62' fill='#ffffff' opacity='0.55'/>
+  <circle cx='1184.8' cy='20.4' r='0.63' fill='#ffffff' opacity='0.38'/>
+  <circle cx='648.6' cy='690.9' r='0.91' fill='#ffffff' opacity='0.42'/>
+  <circle cx='718.2' cy='735.9' r='1.47' fill='#ffffff' opacity='0.35'/>
+  <circle cx='621' cy='581.1' r='0.78' fill='#ffffff' opacity='0.45'/>
+  <circle cx='144.4' cy='138.4' r='1.61' fill='#ffffff' opacity='0.73'/>
+  <circle cx='1411.9' cy='496.3' r='0.81' fill='#ffffff' opacity='0.42'/>
+  <circle cx='627.9' cy='304.7' r='1.14' fill='#ffffff' opacity='0.42'/>
+  <circle cx='1213.9' cy='230.8' r='1.43' fill='#ffffff' opacity='0.68'/>
+  <circle cx='803.9' cy='407.6' r='1.38' fill='#ffffff' opacity='0.44'/>
+  <circle cx='284.2' cy='630.9' r='0.9' fill='#ffffff' opacity='0.81'/>
+  <circle cx='1553.3' cy='8.6' r='1.55' fill='#ffffff' opacity='0.47'/>
+  <circle cx='1829.9' cy='699.9' r='1.51' fill='#ffffff' opacity='0.25'/>
+  <circle cx='1748.5' cy='521.7' r='0.85' fill='#ffffff' opacity='0.38'/>
+  <circle cx='730.9' cy='242.3' r='1.47' fill='#ffffff' opacity='0.27'/>
+  <circle cx='1637.2' cy='651.6' r='1.66' fill='#ffffff' opacity='0.89'/>
+  <circle cx='704.5' cy='843.9' r='1.35' fill='#ffffff' opacity='0.32'/>
+  <circle cx='339' cy='46' r='1.48' fill='#ffffff' opacity='0.8'/>
+  <circle cx='61.8' cy='735' r='0.79' fill='#ffffff' opacity='0.47'/>
+  <circle cx='1754' cy='835' r='1.71' fill='#ffffff' opacity='0.72'/>
+  <circle cx='1525.8' cy='705.8' r='0.96' fill='#ffffff' opacity='0.58'/>
+  <circle cx='1154.5' cy='374.9' r='1.03' fill='#ffffff' opacity='0.26'/>
+  <circle cx='120.1' cy='410.4' r='0.94' fill='#ffffff' opacity='0.34'/>
+  <circle cx='1454.9' cy='525.5' r='1.12' fill='#ffffff' opacity='0.5'/>
+  <circle cx='1654.6' cy='229.5' r='1.2' fill='#ffffff' opacity='0.78'/>
+  <circle cx='740.8' cy='583.7' r='0.8' fill='#ffffff' opacity='0.83'/>
+  <circle cx='171.5' cy='776.2' r='1.77' fill='#ffffff' opacity='0.28'/>
+  <circle cx='875.3' cy='744.5' r='0.95' fill='#ffffff' opacity='0.51'/>
+  <circle cx='690.3' cy='847' r='0.89' fill='#ffffff' opacity='0.26'/>
+  <circle cx='890.1' cy='320.3' r='1.05' fill='#ffffff' opacity='0.85'/>
+  <circle cx='1223.4' cy='514.9' r='0.65' fill='#ffffff' opacity='0.7'/>
+  <circle cx='1472.7' cy='510.4' r='0.7' fill='#ffffff' opacity='0.52'/>
+  <circle cx='825.1' cy='659.9' r='1.17' fill='#ffffff' opacity='0.67'/>
+  <circle cx='933' cy='93' r='1.01' fill='#ffffff' opacity='0.32'/>
+  <circle cx='1278.9' cy='343.4' r='1.1' fill='#ffffff' opacity='0.7'/>
+  <circle cx='899.2' cy='263.2' r='1.28' fill='#ffffff' opacity='0.37'/>
+  <circle cx='364.7' cy='755.4' r='1.53' fill='#ffffff' opacity='0.74'/>
+  <circle cx='729.1' cy='350.7' r='1.7' fill='#ffffff' opacity='0.57'/>
+  <circle cx='1712.5' cy='484.9' r='0.81' fill='#ffffff' opacity='0.76'/>
+  <circle cx='1241.7' cy='400' r='0.76' fill='#ffffff' opacity='0.57'/>
+  <circle cx='1587.9' cy='474.9' r='1.34' fill='#ffffff' opacity='0.69'/>
+  <circle cx='777' cy='551.9' r='1.69' fill='#ffffff' opacity='0.41'/>
+  <circle cx='1261.6' cy='110.9' r='1.03' fill='#ffffff' opacity='0.29'/>
+  </g>
+  <!-- Horizon glow -->
+  <rect y="400" width="1920" height="680" fill="url(#bottomGlow)"/>
+  <!-- Faint distant skyline silhouette -->
+  <path d="M 0 1080 L 0 1040 L 45 1040 L 55 1025 L 65 1040 L 120 1040 L 135 1010 L 140 995 L 145 1010 L 160 1040 L 250 1040 L 265 1020 L 290 1020 L 305 1040 L 410 1040 L 430 990 L 440 970 L 450 990 L 470 1040 L 590 1040 L 610 1025 L 630 1040 L 750 1040 L 775 985 L 785 960 L 795 985 L 820 1040 L 960 1040 L 980 1015 L 1020 1015 L 1040 1040 L 1150 1040 L 1170 980 L 1180 950 L 1190 980 L 1210 1040 L 1340 1040 L 1360 1018 L 1390 1018 L 1410 1040 L 1520 1040 L 1545 990 L 1555 965 L 1565 990 L 1590 1040 L 1710 1040 L 1730 1022 L 1760 1022 L 1780 1040 L 1920 1040 L 1920 1080 Z" fill="#090714" opacity="0.6"/>
+</svg>
