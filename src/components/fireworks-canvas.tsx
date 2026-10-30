@@ -129,14 +129,31 @@ export function FireworksCanvas({
 
   // Build schedule when anchors or seed changes
   useEffect(() => {
-    anchorsMapRef.current = new Map(anchors.map(a => [a.slot, a]));
-    const items = anchors.map(a => ({ slot: a.slot, type: a.type }));
+    let effectiveAnchors = anchors;
+    if (anchors.length === 0) {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      effectiveAnchors = [
+        { slot: 1001, type: "anar", color: "golden", x: w * 0.2, y: h * 0.7, w: 120, h: 160 },
+        { slot: 1002, type: "chakri", color: "rose", x: w * 0.35, y: h * 0.65, w: 120, h: 160 },
+        { slot: 1003, type: "rocket", color: "deepBlue", x: w * 0.5, y: h * 0.75, w: 120, h: 160 },
+        { slot: 1004, type: "phuljhari", color: "forestGreen", x: w * 0.65, y: h * 0.65, w: 120, h: 160 },
+        { slot: 1005, type: "bomb", color: "golden", x: w * 0.8, y: h * 0.7, w: 120, h: 160 },
+        { slot: 1006, type: "rocket", color: "rose", x: w * 0.28, y: h * 0.75, w: 120, h: 160 },
+        { slot: 1007, type: "anar", color: "forestGreen", x: w * 0.72, y: h * 0.7, w: 120, h: 160 },
+      ];
+    }
+    anchorsMapRef.current = new Map(effectiveAnchors.map(a => [a.slot, a]));
+    const items = effectiveAnchors.map(a => ({ slot: a.slot, type: a.type }));
     ignitionsRef.current = buildIgnitions(seed, items);
     finaleRef.current = buildFinale(seed, window.innerWidth, window.innerHeight);
     startedIgnitionsRef.current.clear();
     finishedIgnitionsRef.current.clear();
     startedFinaleRef.current.clear();
   }, [seed, anchors]);
+
+  const showTRef = useRef(showT);
+  showTRef.current = showT;
 
   useEffect(() => {
     if (reducedMotion || !running) return;
@@ -148,8 +165,9 @@ export function FireworksCanvas({
 
     let animId: number;
     const mountPerf = performance.now();
+    const initialShowT = showTRef.current;
     let lastTime = mountPerf;
-    let localShowT = showT;
+    let localShowT = initialShowT;
 
     // Canvas sizing with 4.2MP cap
     const resizeCanvas = () => {
@@ -223,7 +241,7 @@ export function FireworksCanvas({
 
       // Time progression from mount time
       const elapsedSinceMount = now - mountPerf;
-      localShowT = showT + elapsedSinceMount;
+      localShowT = initialShowT + elapsedSinceMount;
 
       const scale = canvas.height / 1080;
       const w = canvas.width;
@@ -622,7 +640,7 @@ export function FireworksCanvas({
       // Clear pool
       for (const p of particlesRef.current) p.active = false;
     };
-  }, [running, showT, reducedMotion]);
+  }, [running, reducedMotion]);
 
   if (reducedMotion || !running) return null;
 

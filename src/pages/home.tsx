@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { createSubmission, getState, type Submission } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { CrackerArt } from "@/components/cracker-art";
 import { CrackerCard } from "@/components/cracker-card";
+import { SingleCrackerBurst } from "@/components/single-cracker-burst";
 import {
   CRACKER_TYPES,
   CRACKER_LABELS,
@@ -69,12 +70,56 @@ export default function Home() {
 
   const [submissionsClosed, setSubmissionsClosed] = useState(false);
   const [testPaused, setTestPaused] = useState(false);
+  const [burnStage, setBurnStage] = useState<"ready" | "lit" | "bursting" | "aftermath">("ready");
+  const hasTriggeredBurnRef = useRef(false);
 
   useEffect(() => {
     let active = true;
     getState().then(state => { if (active) setTestPaused(state.testMode); }).catch(() => {});
     return () => { active = false; };
   }, []);
+
+  // Poll wall state after submission to synchronize grand finale cracker burst
+  useEffect(() => {
+    if (!submitted) return;
+    let active = true;
+
+    const check = async () => {
+      try {
+        const state = await getState();
+        if (!active) return;
+        if (state.mode === "burn") {
+          if (!hasTriggeredBurnRef.current) {
+            hasTriggeredBurnRef.current = true;
+            const burnAge = Math.max(0, Date.now() - state.changedAt);
+            if (burnAge < 20000) {
+              setBurnStage("lit");
+              window.setTimeout(() => {
+                if (active) setBurnStage("bursting");
+              }, 1600);
+              window.setTimeout(() => {
+                if (active) setBurnStage("aftermath");
+              }, 7500);
+            } else {
+              setBurnStage("aftermath");
+            }
+          }
+        } else {
+          hasTriggeredBurnRef.current = false;
+          setBurnStage("ready");
+        }
+      } catch {
+        // network error, continue polling
+      }
+    };
+
+    void check();
+    const timer = window.setInterval(check, 2000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
+  }, [submitted]);
 
   const [message, setMessage] = useState("");
   const [crackerType, setCrackerType] = useState<CrackerType>("anar");
@@ -157,25 +202,108 @@ export default function Home() {
   if (submitted && submittedSubmission) {
     const finalType = submittedSubmission.cracker ?? crackerForId(submittedSubmission.id);
     const finalColor = submittedSubmission.colorStyle ?? "golden";
+    const isLit = burnStage === "lit" || burnStage === "bursting";
+    const isSpent = burnStage === "aftermath";
+
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 texture-bg">
-        <div className="w-full max-w-md flex flex-col items-center">
-          <div className={`text-center p-8 w-full ${PANEL_CLASS}`}>
-            <div className="w-60 h-64 mx-auto mb-6 flex items-center justify-center">
+      <div
+        className={`min-h-screen flex items-center justify-center p-4 texture-bg relative overflow-hidden ${
+          burnStage === "bursting" && finalType === "bomb" ? "screen-shake" : ""
+        }`}
+      >
+        {/* Full-screen particle canvas during bursting */}
+        <SingleCrackerBurst type={finalType} color={finalColor} stage={burnStage} />
+
+        <div className="w-full max-w-md flex flex-col items-center relative z-20">
+          <div
+            className={`text-center p-8 w-full ${PANEL_CLASS} transition-all duration-300 ${
+              burnStage === "lit" ? "ring-4 ring-amber-400/60 shadow-amber-300/40" : ""
+            }`}
+          >
+            {/* Top Branding / Aftermath Header */}
+            {burnStage === "aftermath" ? (
+              <div className="mb-4">
+                <span className="text-4xl">🪔</span>
+              </div>
+            ) : (
+              <FormBranding />
+            )}
+
+            {/* Cracker Card Preview */}
+            <div
+              className={`w-60 h-64 mx-auto mb-6 flex items-center justify-center relative ${
+                burnStage === "bursting" && finalType === "chakri" ? "cracker-spin" : ""
+              }`}
+            >
               <CrackerCard
                 message={submittedSubmission.message}
                 color={finalColor}
                 type={finalType}
                 id={submittedSubmission.id}
-                lit={false}
+                lit={isLit}
+                spent={isSpent}
               />
             </div>
-            <h1 className="text-xl font-serif text-amber-900 mb-2" data-testid="success-heading">
-              {SUCCESS_HEADING}
-            </h1>
-            <p className="text-amber-700/70 text-sm leading-relaxed" data-testid="success-message">
-              {SUCCESS_BODY}
-            </p>
+
+            {/* Headings and Status Text depending on burn stage */}
+            {burnStage === "ready" && (
+              <>
+                <h1 className="text-xl font-serif text-amber-900 mb-2" data-testid="success-heading">
+                  {SUCCESS_HEADING}
+                </h1>
+                <p className="text-amber-700/70 text-sm leading-relaxed" data-testid="success-message">
+                  {SUCCESS_BODY}
+                </p>
+                <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-xs font-medium text-amber-800">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                  Standing by on the display wall...
+                </div>
+              </>
+            )}
+
+            {burnStage === "lit" && (
+              <>
+                <h1 className="text-2xl font-serif text-amber-900 font-bold mb-2 animate-bounce" data-testid="success-heading">
+                  🔥 Fuse Ignited!
+                </h1>
+                <p className="text-amber-800 text-sm leading-relaxed font-medium" data-testid="success-message">
+                  Get ready! The grand celebration is beginning...
+                </p>
+              </>
+            )}
+
+            {burnStage === "bursting" && (
+              <>
+                <h1 className="text-2xl font-serif text-amber-900 font-bold mb-2" data-testid="success-heading">
+                  ✨ Crackers Bursting! ✨
+                </h1>
+                <p className="text-amber-800 text-sm leading-relaxed font-semibold italic" data-testid="success-message">
+                  “{submittedSubmission.message}”
+                </p>
+              </>
+            )}
+
+            {burnStage === "aftermath" && (
+              <>
+                <h1 className="text-3xl font-serif font-black text-amber-900 mb-2" data-testid="success-heading">
+                  ✨ Happy Diwali! ✨
+                </h1>
+                <p className="text-amber-700 text-sm leading-relaxed" data-testid="success-message">
+                  Your firecracker was lit into the sky! May the festival of lights illuminate your heart and home.
+                </p>
+                <div className="mt-6 flex justify-center gap-3">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <img
+                      key={i}
+                      src={CENTER_ART}
+                      alt="Diya"
+                      className="w-8 h-8 object-contain diya-flicker"
+                      style={{ animationDelay: `${i * 0.3}s` }}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

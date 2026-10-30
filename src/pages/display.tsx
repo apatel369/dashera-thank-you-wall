@@ -410,13 +410,16 @@ export default function Display() {
         if (state.mode === "burn" && state.changedAt !== knownBurnAt) {
           knownBurnAt = state.changedAt;
           const burnAge = Math.max(0, serverNow() - state.changedAt);
-          if (burnAge < BURN_DURATION_MS && slotsRef.current.every(slot => !slot)) {
-            const recent = allNotesRef.current.slice(-slotCountRef.current);
-            const next = Array.from({ length: slotCountRef.current }, (_, index) =>
-              recent[index] ? { note: makeNote(recent[index], index) } : null,
-            );
-            slotsRef.current = next;
-            setSlots(next);
+          if (burnAge < BURN_DURATION_MS) {
+            const filledCount = slotsRef.current.filter(slot => slot !== null).length;
+            if (filledCount < allNotesRef.current.length && allNotesRef.current.length > 0) {
+              const recent = allNotesRef.current.slice(-slotCountRef.current);
+              const next = Array.from({ length: slotCountRef.current }, (_, index) =>
+                recent[index] ? { note: makeNote(recent[index], index) } : null,
+              );
+              slotsRef.current = next;
+              setSlots(next);
+            }
           }
         }
         knownMode = state.mode;
@@ -499,14 +502,29 @@ export default function Display() {
             slot,
             type,
             color,
-            x: rect.left + rect.width / 2,
-            y: rect.top + rect.height / 2,
+            x: rect.left,
+            y: rect.top,
             w: rect.width,
             h: rect.height,
           });
         }
       });
-      setAnchors(measured);
+      if (measured.length > 0) {
+        setAnchors(prev => {
+          if (
+            prev.length === measured.length &&
+            prev.every(
+              (p, i) =>
+                p.slot === measured[i].slot &&
+                Math.abs(p.x - measured[i].x) < 2 &&
+                Math.abs(p.y - measured[i].y) < 2,
+            )
+          ) {
+            return prev;
+          }
+          return measured;
+        });
+      }
     }
   }, [burnPhase, slots]);
 
