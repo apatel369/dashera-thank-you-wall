@@ -1,3 +1,18 @@
-<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="180" height="180" rx="36" fill="#FF3C00"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <radialGradient id="fGlow" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#fef08a" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="16" cy="14" r="13" fill="url(#fGlow)"/>
+  <!-- Diya base -->
+  <path d="M 4 19 C 5 26 11 28 16 28 C 21 28 27 26 28 19 C 25 22 21 23 16 23 C 11 23 7 22 4 19 Z" fill="#b45309" stroke="#78350f" stroke-width="1"/>
+  <!-- Rim -->
+  <ellipse cx="16" cy="19" rx="12" ry="3.5" fill="#f59e0b" stroke="#d97706" stroke-width="0.8"/>
+  <ellipse cx="16" cy="19" rx="9" ry="2" fill="#78350f"/>
+  <!-- Flame -->
+  <path d="M 16 4 C 12 11 11 16 13 18 C 14 19 18 19 19 18 C 21 16 20 11 16 4 Z" fill="#ef4444"/>
+  <path d="M 16 7 C 13.5 12 13 15 14.5 17 C 15 18 17 18 17.5 17 C 19 15 18.5 12 16 7 Z" fill="#fde047"/>
+  <ellipse cx="16" cy="14" rx="1.5" ry="3" fill="#ffffff"/>
 </svg>

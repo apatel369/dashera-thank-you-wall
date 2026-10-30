@@ -1,8 +1,17 @@
 import { useEffect, useRef, useState } from "react";
-import { Sparkles, QrCode, StickyNote, ExternalLink, LogOut, RefreshCw, FlaskConical, ArrowUp } from "lucide-react";
+import { Flame, QrCode, StickyNote, ExternalLink, LogOut, RefreshCw, FlaskConical, ArrowUp } from "lucide-react";
 import { adminAction, adminSession, listSubmissions, type Submission, type SubmissionCursor, type WallState } from "@/lib/api";
+import { CRACKER_EMOJI, crackerForId } from "@/lib/crackers";
+import {
+  ADMIN_TITLE,
+  BURN_BUTTON,
+  BURN_BUTTON_HINT,
+  BURN_CONFIRM,
+  BURN_CONFIRM_TEST,
+  CENTER_ART,
+} from "@/lib/theme";
 
-const modeLabels = { qr: "QR code", wall: "Filling wall", scroll: "Scrolling notes", burn: "Crackers burst" };
+const modeLabels = { qr: "QR code", wall: "Filling wall", scroll: "Scrolling crackers", burn: "Crackers lit" };
 
 export default function Admin() {
   const [checking, setChecking] = useState(true);
@@ -88,9 +97,7 @@ export default function Admin() {
 
   const changeMode = async (mode: WallState["mode"]) => {
     if (state?.testMode && mode === "qr") return;
-    if (mode === "burn" && !window.confirm(state?.testMode
-      ? "Burst firecrackers for the demo sticky notes on the display? You can return to Fill wall or Scroll notes during this test."
-      : "Burst firecrackers on the display and close submissions?")) return;
+    if (mode === "burn" && !window.confirm(state?.testMode ? BURN_CONFIRM_TEST : BURN_CONFIRM)) return;
     setBusy(true); setError("");
     try { setState(await adminAction("mode", { mode })); }
     catch (err) { setError((err as Error).message); }
@@ -129,7 +136,7 @@ export default function Admin() {
   if (!authenticated) return (
     <div className="min-h-screen texture-bg flex items-center justify-center p-4">
       <form onSubmit={login} className="w-full max-w-sm rounded-2xl border border-amber-100 bg-white/90 p-8 text-center shadow-xl">
-        <img src="/diwali-sabha-artwork.png" alt="Diwali Sabha" className="mx-auto mb-5 h-32 w-auto object-contain" />
+        <img src={CENTER_ART} alt="Diwali Diya" className="mx-auto mb-5 h-28 w-auto object-contain" />
         <h1 className="font-serif text-2xl text-amber-950">Wall controls</h1>
         <p className="mt-2 text-sm text-amber-800/70">Enter the admin password to run the display.</p>
         <input type="password" value={password} onChange={event => setPassword(event.target.value)} required autoFocus placeholder="Admin password"
@@ -144,7 +151,7 @@ export default function Admin() {
     <div className="min-h-screen texture-bg p-4 sm:p-8">
       <div className="mx-auto max-w-6xl">
         <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
-          <div><h1 className="font-serif text-3xl text-amber-950">Diwali Sabha · Wall controls</h1><p className="mt-1 text-amber-900/65">Opening this dashboard starts a new session with the QR code hidden.</p></div>
+          <div><h1 className="font-serif text-3xl text-amber-950">{ADMIN_TITLE}</h1><p className="mt-1 text-amber-900/65">Opening this dashboard starts a new session with the QR code hidden.</p></div>
           <div className="flex gap-3">
             <a href="/display" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-amber-300 bg-white/90 px-4 py-2 text-sm font-medium text-amber-900 hover:bg-white"><ExternalLink size={16} /> Open display</a>
             <button onClick={async () => { await adminAction("logout"); setAuthenticated(false); }} className="rounded-lg border border-amber-300 bg-white/90 p-2 text-amber-900" aria-label="Sign out"><LogOut size={18} /></button>
@@ -152,7 +159,7 @@ export default function Admin() {
         </header>
         {state?.testMode && <div role="status" className="mb-5 rounded-xl border-2 border-violet-500 bg-violet-100 px-5 py-4 font-semibold text-violet-950">
           <div className="flex items-center gap-2 text-lg"><FlaskConical size={22} /> TEST MODE</div>
-          <p className="mt-1 text-sm font-normal">The projector is showing demo notes. Switch between Fill wall, Scroll notes, and Burst crackers to rehearse. Guest submissions are paused. End the test to restore your previous wall and QR code.</p>
+          <p className="mt-1 text-sm font-normal">The projector is showing demo notes. Switch between Fill wall, Scroll crackers, and {BURN_BUTTON} to rehearse. Guest submissions are paused. End the test to restore your previous wall and QR code.</p>
         </div>}
         <div className="mb-5 flex flex-wrap gap-3">
           <button disabled={busy || state?.testMode} onClick={startSession} className="inline-flex items-center gap-2 rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-800 disabled:opacity-50"><RefreshCw size={16} /> Start new session</button>
@@ -160,22 +167,26 @@ export default function Admin() {
         </div>
         <div className="mb-5 grid gap-3 sm:grid-cols-4">
           <button disabled={busy || state?.testMode} onClick={() => changeMode("qr")} className={`admin-mode ${state?.mode === "qr" ? "admin-mode-active" : ""}`}><QrCode size={30} /><span className="font-semibold">Show QR code</span><small>Reveal the current session code</small></button>
-          <button disabled={busy} onClick={() => changeMode("wall")} className={`admin-mode ${state?.mode === "wall" ? "admin-mode-active" : ""}`}><StickyNote size={30} /><span className="font-semibold">Fill wall</span><small>Add or replace one note every 2 seconds</small></button>
-          <button disabled={busy} onClick={() => changeMode("scroll")} className={`admin-mode ${state?.mode === "scroll" ? "admin-mode-active" : ""}`}><ArrowUp size={30} /><span className="font-semibold">Scroll notes</span><small>Loop the latest 100 notes upward</small></button>
-          <button disabled={busy || state?.mode === "burn"} onClick={() => changeMode("burn")} className={`admin-mode ${state?.mode === "burn" ? "admin-mode-active" : ""}`}><Sparkles size={30} /><span className="font-semibold">Burst crackers</span><small>Celebrate with firecrackers</small></button>
+          <button disabled={busy} onClick={() => changeMode("wall")} className={`admin-mode ${state?.mode === "wall" ? "admin-mode-active" : ""}`}><StickyNote size={30} /><span className="font-semibold">Fill wall</span><small>Add or replace one cracker every 2 seconds</small></button>
+          <button disabled={busy} onClick={() => changeMode("scroll")} className={`admin-mode ${state?.mode === "scroll" ? "admin-mode-active" : ""}`}><ArrowUp size={30} /><span className="font-semibold">Scroll crackers</span><small>Loop the latest 100 crackers upward</small></button>
+          <button disabled={busy || state?.mode === "burn"} onClick={() => changeMode("burn")} className={`admin-mode ${state?.mode === "burn" ? "admin-mode-active" : ""}`}><Flame size={30} /><span className="font-semibold">{BURN_BUTTON}</span><small>{BURN_BUTTON_HINT}</small></button>
         </div>
         <div className="mb-5 flex flex-wrap gap-3">
           <button disabled={busy || !state} onClick={toggleTest} className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${state?.testMode ? "bg-violet-800 hover:bg-violet-900" : "bg-violet-600 hover:bg-violet-700"}`}><FlaskConical size={16} /> {state?.testMode ? "End test and restore wall" : "Start 100-note test"}</button>
         </div>
         {error && <p role="alert" className="mb-4 rounded-lg bg-red-50 p-3 text-red-700">{error}</p>}
-        <div className="mb-3 flex justify-between text-sm text-amber-900/75"><span>Display: <strong>{state ? modeLabels[state.mode] : "Loading…"}</strong></span><span>{count} sticky {count === 1 ? "note" : "notes"}</span></div>
-        <section className="mb-5 rounded-2xl border border-amber-200 bg-white/90 p-4 shadow-lg" aria-label="Incoming notes">
+        <div className="mb-3 flex justify-between text-sm text-amber-900/75"><span>Display: <strong>{state ? modeLabels[state.mode] : "Loading…"}</strong></span><span>{count} {count === 1 ? "cracker" : "crackers"}</span></div>
+        <section className="mb-5 rounded-2xl border border-amber-200 bg-white/90 p-4 shadow-lg" aria-label="Incoming crackers">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <div><h2 className="font-serif text-xl text-amber-950">Incoming notes</h2><p className="text-sm text-amber-800/70">Notes appear automatically in the selected display mode. Showing the latest {Math.min(items.length, 100)} here.</p></div>
+            <div><h2 className="font-serif text-xl text-amber-950">Incoming crackers</h2><p className="text-sm text-amber-800/70">Crackers appear automatically in the selected display mode. Showing the latest {Math.min(items.length, 100)} here.</p></div>
           </div>
-          {items.length === 0 ? <p className="text-sm text-amber-800/60">New notes will appear here as they arrive.</p> :
+          {items.length === 0 ? <p className="text-sm text-amber-800/60">New crackers will appear here as they arrive.</p> :
             <div className="flex max-h-64 flex-wrap content-start gap-2 overflow-y-auto">
-              {items.slice().reverse().map(item => <span key={item.id} title={item.message} className="max-w-full rounded-full border border-amber-300 bg-amber-50 px-3 py-2 text-left text-sm text-amber-950 shadow-sm"><span className="block max-w-72 truncate">{item.message}</span></span>)}
+              {items.slice().reverse().map(item => (
+                <span key={item.id} title={item.message} className="max-w-full rounded-full border border-amber-300 bg-amber-50 px-3 py-2 text-left text-sm text-amber-950 shadow-sm">
+                  <span className="block max-w-72 truncate">{CRACKER_EMOJI[item.cracker ?? crackerForId(item.id)]} {item.message}</span>
+                </span>
+              ))}
             </div>}
         </section>
         <div className="aspect-video overflow-hidden rounded-2xl border-4 border-amber-200 bg-amber-950 shadow-2xl"><iframe src="/display" title="Live display preview" className="h-full w-full border-0" /></div>

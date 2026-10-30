@@ -2,14 +2,21 @@ import React, { useEffect, useState, useRef, useCallback, useMemo } from "react"
 import { listSubmissions, type Submission, type SubmissionCursor, type WallState } from "@/lib/api";
 import { QrScreen } from "@/components/qr-screen";
 import { advanceWall, FILL_INTERVAL_MS, latestScrollNotes } from "@/lib/wall-flow";
+import { WALL_BG, CENTER_ART, AFTERMATH_TEXT } from "@/lib/theme";
+import { CrackerCard } from "@/components/cracker-card";
+import { type CrackerType, type CrackerColor, crackerForId } from "@/lib/crackers";
+import { FireworksCanvas, type Anchor } from "@/components/fireworks-canvas";
+import { enableSound, isSoundEnabled, toggleSound as toggleSoundAudio, playCue, type SoundCue } from "@/lib/sound";
 
 // ── Grid geometry (responsive) ───────────────────────────────────────────────
 
 const NOTE_TARGET = 200;
 const LARGE_PROJECTOR_NOTE_TARGET = 280;
-const GRID_GAP    = 14;
+const GRID_GAP = 14;
 const POLL_INTERVAL_MS = 2500;
-const BURN_DURATION_MS = 6200;
+const LEAD_IN_MS = 3000;
+const SHOW_MS = 20000;
+const BURN_DURATION_MS = LEAD_IN_MS + SHOW_MS;
 const SCROLL_SPEED_PX_PER_SECOND = 55;
 
 function computeGridDims(w: number, h: number, padX: number, padY: number) {
@@ -37,221 +44,97 @@ function validColumns(cols: number): number[] {
 function slotMeta(idx: number) {
   const h = Math.imul(idx + 1, 2654435761) >>> 0;
   return {
-    r:  ((h & 0xFF) / 255) * 10 - 5,
-    sc: 0.90 + ((h >> 8 & 0xFF) / 255) * 0.20,
     dy: ((h >> 16 & 0xFF) / 255) * 16 - 8,
   };
 }
 
 function useGridDims(padX: number, padY: number) {
-  const [dims, setDims] = useState(() => ({ ...computeGridDims(window.innerWidth, window.innerHeight, padX, padY), height: window.innerHeight }));
+  const [dims, setDims] = useState(() => ({
+    ...computeGridDims(window.innerWidth, window.innerHeight, padX, padY),
+    height: window.innerHeight,
+  }));
   useEffect(() => {
-    const handler = () => setDims({ ...computeGridDims(window.innerWidth, window.innerHeight, padX, padY), height: window.innerHeight });
+    const handler = () =>
+      setDims({
+        ...computeGridDims(window.innerWidth, window.innerHeight, padX, padY),
+        height: window.innerHeight,
+      });
     window.addEventListener("resize", handler);
     return () => window.removeEventListener("resize", handler);
   }, [padX, padY]);
   return dims;
 }
 
-const PAPER_COLORS: Record<string, { bg: string }> = {
-  golden:      { bg: "#fef08a" },
-  rose:        { bg: "#ffe4e6" },
-  deepBlue:    { bg: "#dbeafe" },
-  forestGreen: { bg: "#dcfce7" },
-};
-
-const FONT_COLOR_MAP: Record<string, string> = {
-  warm:    "#5c2a0a",
-  crimson: "#9b1b1b",
-  indigo:  "#312075",
-  forest:  "#1a4731",
-  ink:     "#1a1a2e",
-};
-
-const SYMBOL_EMOJI: Record<string, string> = {
-  none: "", namaste: "🙏", heart: "❤️", hug: "🤗",
-  lotus: "🪷", om: "ॐ", star: "⭐",
-};
-
-function genWavyClip(cycles = 5, amp = 2): string {
-  const p: string[] = [];
-  const f = (n: number) => n.toFixed(2);
-  const n = cycles * 16;
-  for (let i = 0; i <= n; i++) {
-    const t = i / n, x = t * 100;
-    const y = amp + amp * Math.sin(t * Math.PI * 2 * cycles);
-    p.push(`${f(x)}% ${f(y)}%`);
-  }
-  for (let i = 1; i <= n; i++) {
-    const t = i / n, y = t * 100;
-    const x = 100 - amp - amp * Math.sin(t * Math.PI * 2 * cycles);
-    p.push(`${f(x)}% ${f(y)}%`);
-  }
-  for (let i = n; i >= 0; i--) {
-    const t = i / n, x = t * 100;
-    const y = 100 - amp - amp * Math.sin(t * Math.PI * 2 * cycles);
-    p.push(`${f(x)}% ${f(y)}%`);
-  }
-  for (let i = n; i >= 1; i--) {
-    const t = i / n, y = t * 100;
-    const x = amp + amp * Math.sin(t * Math.PI * 2 * cycles);
-    p.push(`${f(x)}% ${f(y)}%`);
-  }
-  return `polygon(${p.join(", ")})`;
-}
-
-const WAVY_CLIP = genWavyClip();
-
-function getBgStyle(texture: string | undefined, bgColor: string) {
-  const layers: string[] = [];
-  const sizes: string[]  = [];
-
-  if (texture === "ruled") {
-    layers.push("repeating-linear-gradient(transparent,transparent 22px,rgba(0,0,0,0.09) 22px,rgba(0,0,0,0.09) 23px)");
-    sizes.push("auto auto");
-  } else if (texture === "dotted") {
-    layers.push("radial-gradient(circle,rgba(0,0,0,0.16) 1px,transparent 1px)");
-    sizes.push("14px 14px");
-  }
-
-  return {
-    backgroundColor: bgColor,
-    ...(layers.length ? { backgroundImage: layers.join(", "), backgroundSize: sizes.join(", ") } : {}),
-  };
-}
-
 interface ScrollNote {
   key: string;
   sub: Submission;
-  edge: number;
   metaIdx: number;
 }
 
 let noteKeySeq = 0;
 
-function randomEdge() { return Math.random() < 0.5 ? 0 : 2; }
-
 function makeNote(sub: Submission, metaIdx: number): ScrollNote {
-  return { key: `${sub.id}-${noteKeySeq++}`, sub, edge: randomEdge(), metaIdx };
+  return { key: `${sub.id}-${noteKeySeq++}`, sub, metaIdx };
 }
 
-const NoteCard = React.memo(function NoteCard({ note }: { note: ScrollNote }) {
-  const paper     = PAPER_COLORS[note.sub.colorStyle] ?? PAPER_COLORS.golden;
-  const fontColor = FONT_COLOR_MAP[note.sub.fontColor ?? "warm"] ?? "#5c2a0a";
-  const symbol    = SYMBOL_EMOJI[note.sub.symbol ?? "none"] ?? "";
-  const meta      = slotMeta(note.metaIdx);
-  const bgStyle   = getBgStyle(note.sub.texture, paper.bg);
-  const edgeClipPath = note.edge === 2 ? WAVY_CLIP : undefined;
-
-  const symbolRot = ((String(note.sub.id).split("").reduce((a, c) => a + c.charCodeAt(0), 0) % 31) - 15);
-
-  return (
-    <div
-      style={{
-        width: "100%",
-        height: "100%",
-        position: "relative",
-        transform: `rotate(${meta.r}deg) scale(${meta.sc})`,
-      }}
-      data-testid={`wall-card-${note.sub.id}`}
-    >
-      <div style={{
-        position: "absolute", top: -10, left: "50%",
-        transform: "translateX(-50%) rotate(-1.5deg)",
-        width: 56, height: 16,
-        background: "rgba(255,255,255,0.48)",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-        zIndex: 10,
-      }} />
-      <div style={{
-        position: "absolute", inset: 0,
-        filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.12)) drop-shadow(0 1px 3px rgba(0,0,0,0.07))",
-      }}>
-        <div style={{
-          width: "100%", height: "100%",
-          display: "flex", flexDirection: "column", position: "relative",
-          ...(edgeClipPath ? { clipPath: edgeClipPath } : {}),
-          ...bgStyle,
-        }}>
-          <div style={{
-            flex: 1, display: "flex", flexDirection: "column",
-            justifyContent: "center", alignItems: "center",
-            textAlign: "center", padding: "clamp(0.6rem,0.6vw,1.35rem)",
-            paddingTop: "clamp(0.9rem,0.8vw,1.8rem)",
-          }}>
-            <div style={{
-              fontFamily: "Georgia, serif", fontStyle: "italic",
-              color: fontColor, opacity: 0.6,
-              fontSize: "clamp(0.5rem, 0.43vw, 1rem)",
-              marginBottom: "0.25em", width: "100%", textAlign: "center",
-            }}>
-              Light a diya of gratitude...
-            </div>
-            <div style={{
-              fontFamily: "'Caveat', cursive", fontWeight: 600,
-              color: fontColor,
-              fontSize: note.sub.message.length > 70
-                ? "clamp(1rem, 0.75vw, 1.65rem)"
-                : "clamp(1.15rem, 1vw, 2.15rem)",
-              lineHeight: 1.2, wordBreak: "break-word", width: "100%",
-            }}>
-              {note.sub.message}
-            </div>
-          </div>
-          {symbol && (
-            <div style={{
-              position: "absolute", bottom: "0.4em", right: "0.5em",
-              fontSize: "clamp(1.4rem, 1.2vw, 2.75rem)", opacity: 0.5, lineHeight: 1,
-              transform: `rotate(${symbolRot}deg)`,
-            }}>
-              {symbol}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-});
-
-/** One note per grid position; a replacement uses a fresh key to replay its entrance. */
+/** One cracker per grid position. */
 const WallSlot = React.memo(function WallSlot({
   col,
   row,
   slotIndex,
   note,
-  burning,
-  burnElapsedMs,
+  lit,
+  spent,
 }: {
   col: number;
   row: number;
   slotIndex: number;
   note: ScrollNote;
-  burning: boolean;
-  burnElapsedMs: number;
+  lit: boolean;
+  spent: boolean;
 }) {
   const meta = slotMeta(note.metaIdx);
+  const cracker = note.sub.cracker ?? crackerForId(note.sub.id);
+  const color = (note.sub.colorStyle ?? "golden") as CrackerColor;
+
   return (
     <div
-      className={burning ? "burning-note" : "wall-note-arrive"}
+      data-cracker-slot={slotIndex}
+      data-cracker-type={cracker}
+      data-cracker-color={color}
+      data-testid={`wall-card-${note.sub.id}`}
+      className="wall-note-arrive"
       style={{
         gridColumn: col + 1,
         gridRow: row + 1,
         minWidth: 0,
         minHeight: 0,
-        "--note-dy": `${meta.dy}px`,
-        "--burn-delay": `${((slotIndex * 5) % 8) * 110 - burnElapsedMs}ms`,
         transform: `translateY(${meta.dy}px)`,
-      } as React.CSSProperties}
+      }}
     >
-      <NoteCard note={note} />
+      <CrackerCard
+        message={note.sub.message}
+        color={color}
+        type={cracker}
+        id={note.sub.id}
+        lit={lit}
+        spent={spent}
+      />
     </div>
   );
 });
 
 type MovingCard = { key: string; lane: number; y: number; note: ScrollNote };
 
-/** Each side column is a conveyor. Existing cards keep moving when the latest-100 list changes. */
-function ScrollingNotes({ notes, columns, cols, rows, height, gridStyle }: {
+/** Each side column is a conveyor of crackers. */
+function ScrollingNotes({
+  notes,
+  columns,
+  cols,
+  rows,
+  height,
+  gridStyle,
+}: {
   notes: Submission[];
   columns: number[];
   cols: number;
@@ -279,7 +162,8 @@ function ScrollingNotes({ notes, columns, cols, rows, height, gridStyle }: {
       });
     }
     pendingRef.current = Array.from({ length: laneCount }, (_, lane) =>
-      (pendingRef.current[lane] ?? []).filter(note => nextIds.has(note.id)));
+      (pendingRef.current[lane] ?? []).filter(note => nextIds.has(note.id)),
+    );
     poolRef.current = nextPool;
     knownIdsRef.current = nextIds;
   }, [notes, columns.length]);
@@ -292,11 +176,16 @@ function ScrollingNotes({ notes, columns, cols, rows, height, gridStyle }: {
     let lastTime = 0;
     let lastRender = 0;
     const draw = (time: number) => {
-      if (lastTime) distanceRef.current += Math.min(time - lastTime, 100) * SCROLL_SPEED_PX_PER_SECOND / 1000;
+      if (lastTime)
+        distanceRef.current +=
+          (Math.min(time - lastTime, 100) * SCROLL_SPEED_PX_PER_SECOND) / 1000;
       lastTime = time;
       if (time - lastRender >= 50) {
         lastRender = time;
-        const first = Math.max(0, Math.floor((distanceRef.current - height - cardHeight) / step));
+        const first = Math.max(
+          0,
+          Math.floor((distanceRef.current - height - cardHeight) / step),
+        );
         const last = Math.ceil(distanceRef.current / step) + 1;
         const moving: MovingCard[] = [];
         const activeKeys = new Set<string>();
@@ -315,10 +204,16 @@ function ScrollingNotes({ notes, columns, cols, rows, height, gridStyle }: {
             let note = assignedRef.current.get(key);
             if (!assignedRef.current.has(key)) {
               const pending = pendingRef.current[lane] ?? [];
-              const pendingIndex = pending.findIndex(item => !visibleIds.has(item.id));
-              const next = pendingIndex >= 0 ? pending.splice(pendingIndex, 1)[0] :
-                Array.from({ length: pool.length }, (_, index) => pool[(row + index) % pool.length])
-                  .find(item => !visibleIds.has(item.id));
+              const pendingIndex = pending.findIndex(
+                item => !visibleIds.has(item.id),
+              );
+              const next =
+                pendingIndex >= 0
+                  ? pending.splice(pendingIndex, 1)[0]
+                  : Array.from(
+                      { length: pool.length },
+                      (_, index) => pool[(row + index) % pool.length],
+                    ).find(item => !visibleIds.has(item.id));
               note = next ? makeNote(next, lane + row * cols) : null;
               assignedRef.current.set(key, note);
               if (note) visibleIds.add(note.sub.id);
@@ -338,14 +233,43 @@ function ScrollingNotes({ notes, columns, cols, rows, height, gridStyle }: {
   }, [columns, cols, height, rows]);
 
   const cardHeight = Math.max(170, height / rows) - GRID_GAP;
-  return <div style={{ ...gridStyle, zIndex: 1 }} data-testid="scrolling-wall">
-    {columns.map((col, lane) => <div key={col} style={{ gridColumn: col + 1, gridRow: "1 / -1", position: "relative", overflow: "hidden" }}>
-      {cards.filter(card => card.lane === lane).map(card =>
-        <div key={card.key} style={{ position: "absolute", top: card.y, left: 0, right: 0, height: cardHeight }}>
-          <NoteCard note={card.note} />
-        </div>)}
-    </div>)}
-  </div>;
+  return (
+    <div style={{ ...gridStyle, zIndex: 1 }} data-testid="scrolling-wall">
+      {columns.map((col, lane) => (
+        <div
+          key={col}
+          style={{
+            gridColumn: col + 1,
+            gridRow: "1 / -1",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          {cards
+            .filter(card => card.lane === lane)
+            .map(card => (
+              <div
+                key={card.key}
+                style={{
+                  position: "absolute",
+                  top: card.y,
+                  left: 0,
+                  right: 0,
+                  height: cardHeight,
+                }}
+              >
+                <CrackerCard
+                  message={card.note.sub.message}
+                  color={(card.note.sub.colorStyle ?? "golden") as CrackerColor}
+                  type={card.note.sub.cracker ?? crackerForId(card.note.sub.id)}
+                  id={card.note.sub.id}
+                />
+              </div>
+            ))}
+        </div>
+      ))}
+    </div>
+  );
 }
 
 type ActiveSlot = { note: ScrollNote };
@@ -363,11 +287,41 @@ function slotPositions(cols: number, rows: number): SlotPosition[] {
 // ── Main display ─────────────────────────────────────────────────────────────
 
 export default function Display() {
-  const [wallState, setWallState] = useState<WallState>({ mode: "wall", session: "initial", changedAt: 0, testMode: false });
-  const [burnVisible, setBurnVisible] = useState(false);
-  const [burnElapsedMs, setBurnElapsedMs] = useState(0);
+  const [wallState, setWallState] = useState<WallState>({
+    mode: "wall",
+    session: "initial",
+    changedAt: 0,
+    testMode: false,
+  });
+
   const [slots, setSlots] = useState<(ActiveSlot | null)[]>([]);
   const [scrollNotes, setScrollNotes] = useState<Submission[]>([]);
+
+  // Sound state
+  const isTopLevel = typeof window !== "undefined" && window.self === window.top;
+  const [soundOn, setSoundOn] = useState(() => isSoundEnabled());
+
+  const handleToggleSound = () => {
+    const next = toggleSoundAudio();
+    setSoundOn(next);
+  };
+
+  // Clock synchronization
+  const clockOffsetRef = useRef(0);
+  const serverNow = useCallback(() => Date.now() + clockOffsetRef.current, []);
+
+  // Burn phase and fireworks state
+  const [burnPhase, setBurnPhase] = useState<"idle" | "countdown" | "show" | "aftermath">("idle");
+  const [countdownSec, setCountdownSec] = useState<number>(3);
+  const [showT, setShowT] = useState<number>(0);
+  const [screenShake, setScreenShake] = useState(false);
+  const [litSlots, setLitSlots] = useState<Set<number>>(() => new Set());
+  const [spentSlots, setSpentSlots] = useState<Set<number>>(() => new Set());
+  const [anchors, setAnchors] = useState<Anchor[]>([]);
+
+  const reducedMotion =
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const { cols, rows, height } = useGridDims(0, 0);
   const columns = useMemo(() => validColumns(cols), [cols]);
@@ -389,8 +343,7 @@ export default function Display() {
     setSlots(result.slots);
   }, []);
 
-  // One feed request provides both wall state and only the notes added since
-  // the last poll. The fixed wall consumes its queue at one note per two seconds.
+  // Poll submissions feed
   useEffect(() => {
     let active = true;
     let loading = false;
@@ -404,20 +357,24 @@ export default function Display() {
       try {
         const data = await listSubmissions(false, knownSession, cursorRef.current);
         if (!active) return;
+
+        if (typeof data.serverTime === "number") {
+          clockOffsetRef.current = data.serverTime - Date.now();
+        }
+
         const state = data.state;
-        const burnAge = state.mode === "burn" ? Math.max(0, Date.now() - state.changedAt) : 0;
-        setBurnVisible(state.mode === "burn" && burnAge < BURN_DURATION_MS);
         setWallState(previous =>
-          previous.mode === state.mode && previous.session === state.session &&
-          previous.changedAt === state.changedAt && previous.testMode === state.testMode
-            ? previous : state,
+          previous.mode === state.mode &&
+          previous.session === state.session &&
+          previous.changedAt === state.changedAt &&
+          previous.testMode === state.testMode
+            ? previous
+            : state,
         );
 
         if (state.session !== knownSession) {
           if (knownSession) {
             const shown = new Set(seenIdsRef.current);
-            // Real notes still queued when testing starts should remain
-            // eligible when the live wall returns.
             for (const queued of queueRef.current) shown.delete(queued.note.sub.id);
             seenBySessionRef.current.set(knownSession, shown);
           }
@@ -443,145 +400,334 @@ export default function Display() {
           }
         }
         if (state.testMode && knownMode === "burn" && state.mode === "wall") {
-          // Rehearsing another wall fill after a demo burn should show all
-          // 100 demo notes again, including those already displayed before.
           const empty = Array.from({ length: slotCountRef.current }, () => null);
           slotsRef.current = empty;
           setSlots(empty);
-          queueRef.current = allNotesRef.current.filter(note => !note.hidden)
+          queueRef.current = allNotesRef.current
+            .filter(note => !note.hidden)
             .map((note, index) => ({ note: makeNote(note, index) }));
         }
         if (state.mode === "burn" && state.changedAt !== knownBurnAt) {
           knownBurnAt = state.changedAt;
-          setBurnElapsedMs(Math.min(burnAge, BURN_DURATION_MS));
+          const burnAge = Math.max(0, serverNow() - state.changedAt);
           if (burnAge < BURN_DURATION_MS && slotsRef.current.every(slot => !slot)) {
             const recent = allNotesRef.current.slice(-slotCountRef.current);
             const next = Array.from({ length: slotCountRef.current }, (_, index) =>
-              recent[index] ? { note: makeNote(recent[index], index) } : null);
+              recent[index] ? { note: makeNote(recent[index], index) } : null,
+            );
             slotsRef.current = next;
             setSlots(next);
           }
         }
         knownMode = state.mode;
-      } catch (error) { console.error("Wall refresh failed", error); }
-      finally { loading = false; }
+      } catch (error) {
+        console.error("Wall refresh failed", error);
+      } finally {
+        loading = false;
+      }
     };
     void refresh();
     const timer = window.setInterval(refresh, POLL_INTERVAL_MS);
-    return () => { active = false; window.clearInterval(timer); };
-  }, []);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
+  }, [serverNow]);
 
+  // Wall advance timer
   useEffect(() => {
     if (wallState.mode !== "wall") return;
     const timer = window.setInterval(advanceSlots, FILL_INTERVAL_MS);
     return () => window.clearInterval(timer);
   }, [wallState.mode, advanceSlots]);
 
+  // Grid resize rebalance
   useEffect(() => {
     const capacity = positions.length;
     const current = slotsRef.current;
     if (current.length === capacity) return;
-    const displaced = current.slice(capacity).filter((slot): slot is ActiveSlot => slot !== null);
+    const displaced = current
+      .slice(capacity)
+      .filter((slot): slot is ActiveSlot => slot !== null);
     if (displaced.length) queueRef.current.unshift(...displaced);
     const next = Array.from({ length: capacity }, (_, index) => current[index] ?? null);
     slotsRef.current = next;
     setSlots(next);
   }, [positions.length]);
 
+  // Burn timeline loop
   useEffect(() => {
-    if (wallState.mode !== "burn" || !burnVisible) return;
-    const finishBurn = () => {
-      setBurnVisible(false);
-      const empty = Array.from({ length: slotCountRef.current }, () => null);
-      slotsRef.current = empty;
-      setSlots(empty);
-    };
-    const remaining = BURN_DURATION_MS - Math.max(0, Date.now() - wallState.changedAt);
-    if (remaining <= 0) {
-      finishBurn();
+    if (wallState.mode !== "burn") {
+      setBurnPhase("idle");
+      setLitSlots(new Set());
+      setSpentSlots(new Set());
       return;
     }
-    const timer = window.setTimeout(finishBurn, remaining);
-    return () => window.clearTimeout(timer);
-  }, [wallState.mode, wallState.changedAt, burnVisible]);
+
+    const tick = () => {
+      const burnAge = serverNow() - wallState.changedAt;
+      const t = burnAge - LEAD_IN_MS;
+      setShowT(t);
+
+      if (t < 0) {
+        setBurnPhase("countdown");
+        setCountdownSec(Math.max(1, Math.min(3, Math.ceil(-t / 1000))));
+      } else if (t < SHOW_MS) {
+        setBurnPhase("show");
+      } else {
+        setBurnPhase("aftermath");
+      }
+    };
+
+    tick();
+    const interval = window.setInterval(tick, 100);
+    return () => window.clearInterval(interval);
+  }, [wallState.mode, wallState.changedAt, serverNow]);
+
+  // Measure cracker anchors for fireworks
+  useEffect(() => {
+    if (burnPhase === "countdown" || burnPhase === "show") {
+      const elements = document.querySelectorAll<HTMLElement>("[data-cracker-slot]");
+      const measured: Anchor[] = [];
+      elements.forEach(el => {
+        const slot = parseInt(el.getAttribute("data-cracker-slot") || "-1", 10);
+        const type = (el.getAttribute("data-cracker-type") || "anar") as CrackerType;
+        const color = (el.getAttribute("data-cracker-color") || "golden") as CrackerColor;
+        const rect = el.getBoundingClientRect();
+        if (slot >= 0 && rect.width > 0 && rect.height > 0) {
+          measured.push({
+            slot,
+            type,
+            color,
+            x: rect.left + rect.width / 2,
+            y: rect.top + rect.height / 2,
+            w: rect.width,
+            h: rect.height,
+          });
+        }
+      });
+      setAnchors(measured);
+    }
+  }, [burnPhase, slots]);
+
+  const handleCue = useCallback(
+    (cue: SoundCue) => {
+      if (soundOn) {
+        playCue(cue);
+      }
+      if (cue === "boom") {
+        setScreenShake(true);
+        window.setTimeout(() => setScreenShake(false), 250);
+      }
+    },
+    [soundOn],
+  );
+
+  const handleLitSlotChange = useCallback((slot: number, isLit: boolean) => {
+    setLitSlots(prev => {
+      const next = new Set(prev);
+      if (isLit) next.add(slot);
+      else next.delete(slot);
+      return next;
+    });
+  }, []);
+
+  const handleSpentSlot = useCallback((slot: number) => {
+    setSpentSlots(prev => {
+      const next = new Set(prev);
+      next.add(slot);
+      return next;
+    });
+  }, []);
 
   const cStart = middleColStart(cols);
   const rStart = Math.ceil((rows - 2) / 2);
   const gridStyle: React.CSSProperties = {
-    position: "absolute", inset: 0,
+    position: "absolute",
+    inset: 0,
     display: "grid",
     gridTemplateColumns: `repeat(${cols}, 1fr)`,
     gridTemplateRows: `repeat(${rows}, 1fr)`,
     gap: `${GRID_GAP}px`,
   };
-  const burning = wallState.mode === "burn";
-  const showNotes = wallState.mode === "wall" || (burning && burnVisible);
+
+  const isBurn = wallState.mode === "burn";
+  const showCrackers = wallState.mode === "wall" || (isBurn && burnPhase !== "aftermath");
 
   return (
     <div
-      className="w-screen h-screen overflow-hidden relative select-none"
+      className={`w-screen h-screen overflow-hidden relative select-none ${
+        screenShake ? "screen-shake" : ""
+      }`}
       style={{
-        backgroundColor: "#160e29",
-        backgroundImage: "linear-gradient(rgba(20, 10, 35, 0.25), rgba(20, 10, 35, 0.45)), url('/diwali-night-wall-bg.png')",
+        backgroundColor: "#070716",
+        backgroundImage: `url('${WALL_BG}')`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
       }}
     >
       <div className="absolute inset-0">
+        {/* Center Artwork */}
         <div style={{ ...gridStyle, zIndex: 0 }}>
-          <div style={{
-            gridColumn: `${cStart + 1} / ${cStart + 3}`,
-            gridRow: `${rStart + 1} / ${rStart + 3}`,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            pointerEvents: "none",
-          }}>
+          <div
+            style={{
+              gridColumn: `${cStart + 1} / ${cStart + 3}`,
+              gridRow: `${rStart + 1} / ${rStart + 3}`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              pointerEvents: "none",
+            }}
+          >
             <img
-              src="/diwali-sabha-artwork.png"
-              alt="Diwali Sabha artwork showing festive diyas and rangoli"
+              src={CENTER_ART}
+              alt="A glowing Diwali diya"
               style={{
-                maxWidth: "min(600px, 32vw)",
-                maxHeight: "min(500px, 38vh)",
+                maxWidth: "min(520px, 28vw)",
+                maxHeight: "min(420px, 32vh)",
                 width: "100%",
                 height: "auto",
-                aspectRatio: "32 / 27",
                 objectFit: "contain",
-                objectPosition: "center",
+                filter: "drop-shadow(0 0 25px rgba(245, 158, 11, 0.4))",
               }}
             />
           </div>
         </div>
 
-        {showNotes && <div style={{ ...gridStyle, zIndex: 1 }}>
-          {positions.map(({ col, row }, slotIndex) => {
-            const active = slots[slotIndex];
-            return active && <WallSlot
-              key={active.note.key}
-              col={col}
-              row={row}
-              slotIndex={slotIndex}
-              note={active.note}
-              burning={burning}
-              burnElapsedMs={burnElapsedMs}
-            />;
-          })}
-        </div>}
-        {wallState.mode === "scroll" && <ScrollingNotes key={wallState.session} notes={scrollNotes} columns={columns}
-          cols={cols} rows={rows} height={height} gridStyle={gridStyle} />}
+        {/* Crackers Grid */}
+        {showCrackers && (
+          <div style={{ ...gridStyle, zIndex: 1 }}>
+            {positions.map(({ col, row }, slotIndex) => {
+              const active = slots[slotIndex];
+              return (
+                active && (
+                  <WallSlot
+                    key={active.note.key}
+                    col={col}
+                    row={row}
+                    slotIndex={slotIndex}
+                    note={active.note}
+                    lit={litSlots.has(slotIndex)}
+                    spent={spentSlots.has(slotIndex)}
+                  />
+                )
+              );
+            })}
+          </div>
+        )}
+
+        {/* Scrolling Crackers */}
+        {wallState.mode === "scroll" && (
+          <ScrollingNotes
+            key={wallState.session}
+            notes={scrollNotes}
+            columns={columns}
+            cols={cols}
+            rows={rows}
+            height={height}
+            gridStyle={gridStyle}
+          />
+        )}
       </div>
+
+      {/* QR Screen */}
       {wallState.mode === "qr" && <QrScreen session={wallState.session} />}
-      {wallState.testMode && <div role="status" className="pointer-events-none absolute left-1/2 top-4 z-30 -translate-x-1/2 rounded-xl border-2 border-white bg-violet-700 px-5 py-2 text-lg font-bold tracking-widest text-white shadow-xl">
-        TEST MODE · DEMO NOTES
-      </div>}
-      {burning && showNotes && <div className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
-        <div className="burn-atmosphere" aria-hidden="true" style={{ "--burn-elapsed": `${burnElapsedMs}ms` } as React.CSSProperties}>
-          <div className="burn-flash" />
-          <div className="burn-embers" />
-          <div className="burn-smoke burn-smoke-left" />
-          <div className="burn-smoke burn-smoke-center" />
-          <div className="burn-smoke burn-smoke-right" />
+
+      {/* Test Mode Banner */}
+      {wallState.testMode && (
+        <div
+          role="status"
+          className="pointer-events-none absolute left-1/2 top-4 z-30 -translate-x-1/2 rounded-xl border-2 border-white bg-violet-700 px-5 py-2 text-lg font-bold tracking-widest text-white shadow-xl"
+        >
+          TEST MODE · DEMO CRACKERS
         </div>
-      </div>}
+      )}
+
+      {/* Countdown Overlay */}
+      {isBurn && burnPhase === "countdown" && (
+        <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center bg-black/30 backdrop-blur-[2px]">
+          <div
+            key={countdownSec}
+            className="burn-countdown text-8xl md:text-9xl font-black text-amber-300 drop-shadow-[0_0_40px_rgba(245,158,11,0.95)]"
+          >
+            {countdownSec}
+          </div>
+        </div>
+      )}
+
+      {/* Fireworks Canvas Engine */}
+      {isBurn && burnPhase === "show" && (
+        <FireworksCanvas
+          showT={Math.max(0, showT)}
+          running={true}
+          seed={wallState.changedAt}
+          anchors={anchors}
+          reducedMotion={reducedMotion}
+          onCue={handleCue}
+          onLitSlotChange={handleLitSlotChange}
+          onSpentSlot={handleSpentSlot}
+        />
+      )}
+
+      {/* Aftermath Celebration */}
+      {isBurn && burnPhase === "aftermath" && (
+        <div className="pointer-events-none absolute inset-0 z-30 flex flex-col items-center justify-between p-8 md:p-12">
+          {/* Top floating gold sparks */}
+          <div className="relative w-full flex-1 flex items-center justify-center overflow-hidden">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div
+                key={i}
+                className="float-up absolute w-2.5 h-2.5 rounded-full bg-amber-300 shadow-[0_0_12px_#f59e0b]"
+                style={{
+                  left: `${8 + i * 9}%`,
+                  bottom: `${15 + (i % 4) * 12}%`,
+                  animationDelay: `${i * 0.55}s`,
+                }}
+              />
+            ))}
+
+            {/* Centered Glowing Aftermath Title */}
+            <div className="flex flex-col items-center text-center px-4">
+              <h1 className="aftermath-title text-6xl md:text-8xl lg:text-9xl font-serif font-black tracking-wider leading-tight">
+                {AFTERMATH_TEXT}
+              </h1>
+              <p className="mt-4 text-amber-200/80 font-serif italic text-lg md:text-2xl tracking-wide max-w-xl">
+                May the lights of Diwali bring happiness, peace, and prosperity to all.
+              </p>
+            </div>
+          </div>
+
+          {/* Bottom row of 7 flickering diyas */}
+          <div className="w-full max-w-4xl flex items-center justify-around px-4 pb-4">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <div
+                key={i}
+                className="diya-flicker flex flex-col items-center"
+                style={{ animationDelay: `${(i * 0.3) % 2}s` }}
+              >
+                <img
+                  src={CENTER_ART}
+                  alt="Diwali Diya"
+                  className="w-14 h-14 md:w-20 md:h-20 object-contain drop-shadow-[0_0_15px_rgba(245,158,11,0.7)]"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Sound Toggle Button (top-level only, silent if iframe preview) */}
+      {isTopLevel && (
+        <button
+          onClick={handleToggleSound}
+          className="absolute bottom-4 left-4 z-40 px-3.5 py-1.5 rounded-full bg-slate-900/80 hover:bg-slate-800 text-amber-200 text-sm font-medium border border-amber-500/30 shadow-lg backdrop-blur flex items-center gap-1.5 transition-colors cursor-pointer"
+          title="Toggle fireworks sound"
+        >
+          <span>{soundOn ? "🔊" : "🔇"}</span>
+          <span>{soundOn ? "Sound on" : "Enable sound"}</span>
+        </button>
+      )}
     </div>
   );
 }

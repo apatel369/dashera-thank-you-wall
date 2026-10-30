@@ -7,6 +7,7 @@ export interface CrackerCardProps {
   color: CrackerColor;
   type: CrackerType;
   lit?: boolean;
+  spent?: boolean;
   id?: number;
   className?: string;
   style?: React.CSSProperties;
@@ -17,6 +18,7 @@ export function CrackerCard({
   color,
   type,
   lit = false,
+  spent = false,
   id = 0,
   className = "",
   style,
@@ -27,10 +29,11 @@ export function CrackerCard({
   const rot = id ? (((Math.imul(id | 0, 1103515245) + 12345) >>> 16) % 600 - 300) / 100 : 0;
 
   const isLong = message.length > 50;
+  const statusClass = spent ? "cracker-spent" : lit ? "cracker-lit" : "";
 
   return (
     <div
-      className={`relative w-full h-full flex flex-col items-center justify-between p-2 select-none ${className}`}
+      className={`relative w-full h-full flex flex-col items-center justify-between p-2 select-none ${statusClass} ${className}`}
       style={{
         transform: rot ? `rotate(${rot}deg)` : undefined,
         ...style,
