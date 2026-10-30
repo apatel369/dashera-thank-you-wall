@@ -35,26 +35,26 @@ export function CrackerCard({
 
   return (
     <div
-      className={`relative w-full h-full flex flex-col items-center justify-between p-2 select-none ${statusClass} ${className}`}
+      className={`relative w-full h-full flex flex-col items-center justify-center p-1.5 select-none ${statusClass} ${className}`}
       style={{
         transform: rot ? `rotate(${rot}deg)` : undefined,
         ...style,
       }}
       data-testid="preview-card"
     >
-      {/* Top ~55%: CrackerArt */}
-      <div className="w-full flex-1 min-h-0 flex items-center justify-center p-1 overflow-visible">
+      {/* Top ~52%: CrackerArt */}
+      <div className="w-full flex-1 min-h-[50px] max-h-[110px] flex items-center justify-center p-0.5 overflow-visible">
         <CrackerArt
           type={type}
           color={color}
           lit={lit}
-          className="max-h-full max-w-full drop-shadow-md"
+          className="h-full w-auto max-w-full drop-shadow-md object-contain"
         />
       </div>
 
       {/* Bottom: Paper label with prominent message */}
       <div
-        className="w-full mt-1.5 px-3 py-2 rounded-xl shadow-sm flex flex-col items-center justify-center text-center overflow-hidden"
+        className="w-full mt-1 px-2.5 py-1.5 rounded-xl shadow-sm flex flex-col items-center justify-center text-center overflow-hidden flex-shrink-0"
         style={{
           backgroundColor: palette.tint,
           border: `2px solid ${palette.dark}59`,
@@ -65,7 +65,7 @@ export function CrackerCard({
           className="italic text-center font-medium leading-tight mb-0.5 tracking-wide"
           style={{
             fontSize: largeFont
-              ? "clamp(0.72rem, 0.65vw, 1.15rem)"
+              ? "clamp(0.68rem, 0.6vw, 1.05rem)"
               : "clamp(0.55rem, 0.48vw, 0.85rem)",
             opacity: 0.8,
           }}
@@ -77,13 +77,13 @@ export function CrackerCard({
           style={{
             fontSize: largeFont
               ? isLong
-                ? "clamp(1.2rem, 1.05vw, 2.25rem)"
-                : "clamp(1.45rem, 1.3vw, 2.75rem)"
+                ? "clamp(1.1rem, 0.95vw, 1.95rem)"
+                : "clamp(1.3rem, 1.15vw, 2.35rem)"
               : isLong
                 ? "clamp(0.95rem, 0.8vw, 1.65rem)"
                 : "clamp(1.15rem, 0.95vw, 2.15rem)",
             color: palette.dark,
-            lineHeight: 1.16,
+            lineHeight: 1.15,
           }}
         >
           {message}

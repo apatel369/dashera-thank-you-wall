@@ -10,9 +10,11 @@ import { enableSound, isSoundEnabled, toggleSound as toggleSoundAudio, playCue, 
 
 // ── Grid geometry (responsive) ───────────────────────────────────────────────
 
-const NOTE_TARGET = 200;
-const LARGE_PROJECTOR_NOTE_TARGET = 280;
-const GRID_GAP = 14;
+const TARGET_W = 145;
+const TARGET_H = 165;
+const LARGE_PROJECTOR_TARGET_W = 190;
+const LARGE_PROJECTOR_TARGET_H = 220;
+const GRID_GAP = 12;
 const POLL_INTERVAL_MS = 2500;
 const LEAD_IN_MS = 3000;
 const SHOW_MS = 20000;
@@ -20,9 +22,17 @@ const BURN_DURATION_MS = LEAD_IN_MS + SHOW_MS;
 const SCROLL_SPEED_PX_PER_SECOND = 55;
 
 function computeGridDims(w: number, h: number, padX: number, padY: number) {
-  const target = w >= 2500 ? LARGE_PROJECTOR_NOTE_TARGET : NOTE_TARGET;
-  const cols = Math.max(3, Math.floor((w - 2 * padX + GRID_GAP) / (target + GRID_GAP)));
-  const rows = Math.max(2, Math.floor((h - 2 * padY + GRID_GAP) / (target + GRID_GAP)));
+  const targetW = w >= 2500 ? LARGE_PROJECTOR_TARGET_W : TARGET_W;
+  const targetH = w >= 2500 ? LARGE_PROJECTOR_TARGET_H : TARGET_H;
+
+  let rawCols = Math.floor((w - 2 * padX + GRID_GAP) / (targetW + GRID_GAP));
+  // Guarantee an even number of columns (minimum 6) so left and right are symmetrically balanced around the center 2 columns
+  if (rawCols % 2 !== 0) rawCols--;
+  const cols = Math.max(6, rawCols);
+
+  let rawRows = Math.floor((h - 2 * padY + GRID_GAP) / (targetH + GRID_GAP));
+  const rows = Math.max(3, rawRows);
+
   return { cols, rows };
 }
 
@@ -171,7 +181,7 @@ function ScrollingNotes({
 
   useEffect(() => {
     if (!columns.length) return;
-    const step = Math.max(170, height / rows);
+    const step = Math.max(130, height / rows);
     const cardHeight = step - GRID_GAP;
     let frame = 0;
     let lastTime = 0;
@@ -233,7 +243,7 @@ function ScrollingNotes({
     return () => window.cancelAnimationFrame(frame);
   }, [columns, cols, height, rows]);
 
-  const cardHeight = Math.max(170, height / rows) - GRID_GAP;
+  const cardHeight = Math.max(130, height / rows) - GRID_GAP;
   return (
     <div style={{ ...gridStyle, zIndex: 1 }} data-testid="scrolling-wall">
       {columns.map((col, lane) => (
