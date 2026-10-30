@@ -6,7 +6,7 @@ export function QrScreen({ session }: { session: string }) {
   const qrUrl = url.toString();
   return (
     <div className="qr-screen absolute inset-0 z-20 flex items-start justify-center text-center"
-      style={{ background: "linear-gradient(rgba(64,23,19,.28),rgba(64,23,19,.42)), url('/dashera-sunset-wall-bg.png') center/cover" }}>
+      style={{ background: "linear-gradient(rgba(20,10,35,.35),rgba(20,10,35,.5)), url('/diwali-night-wall-bg.png') center/cover" }}>
       <div className="qr-stage">
         <div className="qr-panel qr-panel-left">
           <QRCodeSVG value={qrUrl} size={1024} level="H" includeMargin aria-label={`Left QR code for ${qrUrl}`} />
@@ -14,8 +14,8 @@ export function QrScreen({ session }: { session: string }) {
         </div>
         <div className="qr-middle">
           <div className="qr-center">
-            <img src="/dusshera-sabha-mythic-archer-duel.png" alt="Dusshera Sabha" />
-            <h1>Burning the Ravan within</h1>
+            <img src="/diwali-sabha-artwork.png" alt="Diwali Sabha" />
+            <h1>Light a diya of gratitude</h1>
             <p>Scan either code, decorate a sticky note, and add it to the wall.</p>
           </div>
         </div>

@@ -185,7 +185,7 @@ const NoteCard = React.memo(function NoteCard({ note }: { note: ScrollNote }) {
               fontSize: "clamp(0.5rem, 0.43vw, 1rem)",
               marginBottom: "0.25em", width: "100%", textAlign: "center",
             }}>
-              Burning the Ravan within...
+              Light a diya of gratitude...
             </div>
             <div style={{
               fontFamily: "'Caveat', cursive", fontWeight: 600,
@@ -521,8 +521,8 @@ export default function Display() {
     <div
       className="w-screen h-screen overflow-hidden relative select-none"
       style={{
-        backgroundColor: "#8d493a",
-        backgroundImage: "linear-gradient(rgba(48, 20, 23, 0.08), rgba(48, 20, 23, 0.22)), url('/dashera-sunset-wall-bg.png')",
+        backgroundColor: "#160e29",
+        backgroundImage: "linear-gradient(rgba(20, 10, 35, 0.25), rgba(20, 10, 35, 0.45)), url('/diwali-night-wall-bg.png')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
@@ -537,17 +537,16 @@ export default function Display() {
             pointerEvents: "none",
           }}>
             <img
-              src="/dusshera-sabha-mythic-archer-duel.png"
-              alt="Dusshera Sabha artwork showing an archer facing Ravana"
+              src="/diwali-sabha-artwork.png"
+              alt="Diwali Sabha artwork showing festive diyas and rangoli"
               style={{
                 maxWidth: "min(600px, 32vw)",
                 maxHeight: "min(500px, 38vh)",
                 width: "100%",
                 height: "auto",
                 aspectRatio: "32 / 27",
-                objectFit: "cover",
+                objectFit: "contain",
                 objectPosition: "center",
-                mixBlendMode: "darken",
               }}
             />
           </div>

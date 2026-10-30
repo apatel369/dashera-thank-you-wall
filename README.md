@@ -1,8 +1,8 @@
-# Dusshera Sabha Thank You Wall
+# Diwali Sabha Celebration Wall
 
 Live site: https://diwali-celebration-wall.vercel.app (the old `dashera-thank-you-wall.vercel.app` address redirects here)
 
-This is a separate Vercel project based on `thank-you-wall-main`. It keeps the original Dusshera artwork, visual theme, and sticky note choices: message, paper color, texture, ink color, and symbol. It uses Vercel Functions and Neon Postgres on the Free plan.
+This is a Vercel project with a Diwali festive visual theme and sticky note choices: message, paper color, texture, ink color, and symbol. It uses Vercel Functions and Neon Postgres on the Free plan.
 
 ## Event flow
 
@@ -11,9 +11,9 @@ This is a separate Vercel project based on `thank-you-wall-main`. It keeps the o
 3. Attendees scan the code and submit notes. The QR code stays the same when you switch display modes.
 4. The admin page shows incoming notes as a read-only list. Press **Fill wall** to add one note every two seconds around the center artwork. Once full, each waiting note replaces one randomly chosen visible note; the wall stays still when no new notes arrive.
 5. Press **Scroll notes** to loop the latest 100 notes upward in side columns, leaving the artwork clear. New submissions join the moving stream without restarting it.
-6. Press **Burn away** to animate visible notes into smoke and close submissions. Press **Show QR code** to return to the same code, or **Start new session** to clear the active wall and expire the previous code. The new code stays hidden until you press **Show QR code**.
+6. Press **Burst crackers** to celebrate with firecrackers and close submissions. Press **Show QR code** to return to the same code, or **Start new session** to clear the active wall and expire the previous code. The new code stays hidden until you press **Show QR code**.
 
-For a rehearsal, press **Start 100-note test** on `/admin`. The projector and admin preview show a **TEST MODE** label and 100 labeled demo notes fill automatically. You can switch between Fill wall, Scroll notes, and Burn away during the test. After burning, choosing Fill wall starts the demo fill again. Guest submissions pause. Press **End test and restore wall** to delete demo notes and return to the prior display mode, QR code, and real notes. Test mode persists across refreshes until an admin ends it.
+For a rehearsal, press **Start 100-note test** on `/admin`. The projector and admin preview show a **TEST MODE** label and 100 labeled demo notes fill automatically. You can switch between Fill wall, Scroll notes, and Burst crackers during the test. After celebrating, choosing Fill wall starts the demo fill again. Guest submissions pause. Press **End test and restore wall** to delete demo notes and return to the prior display mode, QR code, and real notes. Test mode persists across refreshes until an admin ends it.
 
 The admin page includes a live display preview. Open `/display` in a separate full-screen browser window for projection. The display and admin page poll the shared state every few seconds.
 

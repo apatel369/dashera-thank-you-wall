@@ -38,8 +38,8 @@ const PANEL_CLASS =
 function BrandMark({ className = "" }: { className?: string }) {
   return (
     <img
-      src="/dusshera-sabha-mythic-archer-duel.png"
-      alt="Dusshera Sabha artwork showing an archer facing Ravana"
+      src="/diwali-sabha-artwork.png"
+      alt="Diwali Sabha artwork with festive diyas"
       className={`w-full max-w-80 aspect-[32/27] object-cover object-center ${className}`}
     />
   );
@@ -87,7 +87,7 @@ function NotePreview({
                 letterSpacing: "0.04em",
               }}
             >
-              Burning the Ravan within...
+              Light a diya of gratitude...
             </div>
             <div
               className={`font-caveat leading-snug break-words w-full${isEmpty ? " italic opacity-35" : ""}`}
@@ -154,7 +154,7 @@ export default function Home() {
   const selectedFontColor = FONT_COLORS.find(f => f.id === fontColorId) || FONT_COLORS[0];
   const selectedSymbol    = SYMBOLS.find(s => s.id === symbolId)      || SYMBOLS[0];
   const isEmpty         = message.trim() === "";
-  const displayMessage  = isEmpty ? "anger, ego, stubbornness, laziness..." : message;
+  const displayMessage  = isEmpty ? "thankfulness, joy, blessings, love..." : message;
   const noteStyle         = buildNoteStyle(selectedColor.bg, textureId);
 
   const handleSubmit = async () => {
@@ -263,13 +263,13 @@ export default function Home() {
           {/* Message */}
           <div>
             <div className="text-xs font-semibold uppercase tracking-wider text-amber-600 mb-1">
-              Burning the Ravan within...
+              Light a diya of gratitude...
             </div>
             <Textarea
               value={message}
               onChange={e => setMessage(e.target.value.slice(0, 120))}
               className="min-h-[90px] bg-amber-50/60 border-amber-200 focus-visible:ring-amber-400 resize-none text-base text-amber-900 placeholder:text-amber-600/30 placeholder:italic"
-              placeholder="anger, ego, stubbornness, laziness..."
+              placeholder="thankfulness, joy, blessings, love..."
               data-testid="input-message"
             />
             <div className="text-right text-xs text-amber-400 mt-1">{message.length} / 120</div>
