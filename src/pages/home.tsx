@@ -47,11 +47,8 @@ function BrandMark({ className = "" }: { className?: string }) {
 
 function FormBranding() {
   return (
-    <div className="flex flex-col items-center mb-6">
+    <div className="flex justify-center mb-6">
       <BrandMark />
-      <span className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-100/90 text-amber-900 border border-amber-200 shadow-xs">
-        🪔 Diwali Sabha Celebration
-      </span>
     </div>
   );
 }
